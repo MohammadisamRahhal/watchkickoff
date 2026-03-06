@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import type { MatchStatus } from '../constants/match-status';
-import { TeamSummarySchema } from './team.schema';
-import { LeagueSummarySchema } from './league.schema';
-import { MatchEventSchema } from './event.schema';
+import type { MatchStatus } from '../constants/match-status.js';
+import { TeamSummarySchema } from './team.schema.js';
+import { LeagueSummarySchema } from './league.schema.js';
+import { MatchEventSchema } from './event.schema.js';
 
 // Mirror the MATCH_STATUS const as a Zod enum for runtime validation.
 export const MatchStatusSchema = z.enum([

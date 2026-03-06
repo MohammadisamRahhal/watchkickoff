@@ -63,7 +63,7 @@ export default async function LivePage() {
       ) : (
         <div>
           {[...groups.entries()].map(([leagueId, leagueMatches]) => (
-            <MatchGroup key={leagueId} label={`League · ${leagueId.slice(0, 8)}`}>
+            <MatchGroup key={leagueId} label={`League · ${leagueId ? leagueId.slice(0, 8) : "Unknown"}`}>
               {leagueMatches.map((match) => (
                 <MatchRow key={match.id} match={match} />
               ))}

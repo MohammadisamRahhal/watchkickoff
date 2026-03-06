@@ -8,7 +8,6 @@ const nextConfig = {
       },
     ];
   },
-
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'media.api-sports.io' },
@@ -16,8 +15,14 @@ const nextConfig = {
       { protocol: 'https', hostname: '*.cloudinary.com' },
     ],
   },
-
   transpilePackages: ['@watchkickoff/shared'],
+  webpack: (config) => {
+    config.resolve.extensionAlias = {
+      '.js': ['.ts', '.tsx', '.js'],
+      '.jsx': ['.tsx', '.jsx'],
+    };
+    return config;
+  },
 };
 
 export default nextConfig;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { EventType } from '../constants/event-type';
+import type { EventType } from '../constants/event-type.js';
 
 // Mirror the EVENT_TYPE const as a Zod enum for runtime validation.
 export const EventTypeSchema = z.enum([

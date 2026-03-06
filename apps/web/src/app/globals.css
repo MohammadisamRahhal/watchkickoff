@@ -106,3 +106,21 @@ button { cursor: pointer; font-family: inherit; }
 @media (min-width: 640px) {
   .container { padding: 0 24px; }
 }
+
+
+.league-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: background 0.12s, border-color 0.12s;
+  color: inherit;
+  text-decoration: none;
+}
+.league-row:hover {
+  background: var(--bg-elevated);
+  border-color: var(--text-dim);
+}

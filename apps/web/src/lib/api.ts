@@ -48,9 +48,10 @@ export async function getMatchBySlug(slug: string): Promise<MatchDetail> {
 
 /** Live matches — short TTL, revalidated every 15 s. */
 export async function getLiveMatches(): Promise<MatchSummary[]> {
-  return apiFetch<MatchSummary[]>('/matches/live', {
+  const res = await apiFetch<MatchSummary[] | { data: MatchSummary[] }>('/matches/live', {
     next: { revalidate: 15 },
   });
+  return Array.isArray(res) ? res : (res as any).data ?? [];
 }
 
 // ── Leagues ─────────────────────────────────────────────────────

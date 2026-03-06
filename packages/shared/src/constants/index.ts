@@ -1,2 +1,2 @@
-export * from './match-status';
-export * from './event-type';
+export * from './match-status.js';
+export * from './event-type.js';
