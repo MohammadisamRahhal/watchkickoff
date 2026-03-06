@@ -1,0 +1,86 @@
+/**
+ * Typed API client for WatchKickoff.
+ *
+ * All fetches go through this module so we have a single place to:
+ * - Set the base URL (server env vs browser env)
+ * - Add auth headers if needed in future phases
+ * - Handle error responses consistently
+ *
+ * These functions run in React Server Components (no "use client").
+ */
+
+import type { MatchSummary, MatchDetail, League, StandingRow } from '@watchkickoff/shared';
+
+/** Base URL for server-side fetches (server components, route handlers). */
+const BASE = process.env.API_URL ?? 'http://localhost:3001';
+
+// ── Generic fetch helper ────────────────────────────────────────
+
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const url = `${BASE}/api/v1${path}`;
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...init,
+  });
+
+  if (!res.ok) {
+    throw new Error(`API ${res.status} — ${path}`);
+  }
+
+  return res.json() as Promise<T>;
+}
+
+// ── Matches ─────────────────────────────────────────────────────
+
+/** Today's matches — used on the home page. Revalidated every 60 s via ISR. */
+export async function getTodayMatches(): Promise<MatchSummary[]> {
+  return apiFetch<MatchSummary[]>('/matches/today', {
+    next: { revalidate: 60 },
+  });
+}
+
+/** Single match by slug — used on the match detail page. */
+export async function getMatchBySlug(slug: string): Promise<MatchDetail> {
+  return apiFetch<MatchDetail>(`/matches/${slug}`, {
+    next: { revalidate: 30 },
+  });
+}
+
+/** Live matches — short TTL, revalidated every 15 s. */
+export async function getLiveMatches(): Promise<MatchSummary[]> {
+  return apiFetch<MatchSummary[]>('/matches/live', {
+    next: { revalidate: 15 },
+  });
+}
+
+// ── Leagues ─────────────────────────────────────────────────────
+
+/** All active leagues. Revalidated hourly. */
+export async function getLeagues(): Promise<League[]> {
+  return apiFetch<League[]>('/leagues', {
+    next: { revalidate: 3600 },
+  });
+}
+
+/** Single league by slug. */
+export async function getLeagueBySlug(slug: string): Promise<League> {
+  return apiFetch<League>(`/leagues/${slug}`, {
+    next: { revalidate: 3600 },
+  });
+}
+
+/** Fixtures for a league. */
+export async function getLeagueMatches(slug: string): Promise<MatchSummary[]> {
+  return apiFetch<MatchSummary[]>(`/leagues/${slug}/matches`, {
+    next: { revalidate: 300 },
+  });
+}
+
+// ── Standings ────────────────────────────────────────────────────
+
+/** Standings table for a league. */
+export async function getStandings(leagueSlug: string): Promise<StandingRow[]> {
+  return apiFetch<StandingRow[]>(`/leagues/${leagueSlug}/standings`, {
+    next: { revalidate: 300 },
+  });
+}
