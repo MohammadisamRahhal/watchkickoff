@@ -9,19 +9,18 @@ import type { MatchResponse, MatchEventResponse, MatchWithRelations } from './ma
 const logger = createLogger('matches-service');
 
 function formatMatch(row: MatchWithRelations): MatchResponse {
-  const { match, homeTeam, league } = row;
   return {
-    id:        match.id,
-    slug:      match.slug,
-    status:    match.status,
-    minute:    match.minute ?? null,
-    kickoffAt: match.kickoffAt.toISOString(),
-    homeTeam:  { id: homeTeam.id, name: homeTeam.name, crestUrl: homeTeam.crestUrl ?? null, slug: homeTeam.slug },
-    awayTeam:  { id: match.awayTeamId, name: match.awayTeamId, crestUrl: null, slug: match.awayTeamId },
-    score:     { home: match.homeScore ?? 0, away: match.awayScore ?? 0, homeHt: match.homeScoreHt ?? null, awayHt: match.awayScoreHt ?? null },
-    league:    { id: league.id, name: league.name, countryCode: league.countryCode, slug: league.slug },
-    venue:     match.venue ?? null,
-    round:     match.round ?? null,
+    id:        row.id,
+    slug:      row.slug,
+    status:    row.status,
+    minute:    row.minute ?? null,
+    kickoffAt: new Date(row.kickoffAt).toISOString(),
+    homeTeam:  { id: row.homeTeam.id, name: row.homeTeam.name, crestUrl: row.homeTeam.crestUrl ?? null, slug: row.homeTeam.slug },
+    awayTeam:  { id: row.awayTeam.id, name: row.awayTeam.name, crestUrl: row.awayTeam.crestUrl ?? null, slug: row.awayTeam.slug },
+    score:     { home: row.score?.home ?? 0, away: row.score?.away ?? 0, homeHt: row.score?.homeHt ?? null, awayHt: row.score?.awayHt ?? null },
+    league:    { id: row.league.id, name: row.league.name, countryCode: row.league.countryCode, slug: row.league.slug },
+    venue:     row.venue ?? null,
+    round:     row.round ?? null,
   };
 }
 

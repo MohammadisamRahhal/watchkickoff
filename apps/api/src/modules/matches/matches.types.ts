@@ -10,9 +10,18 @@ export type LeagueRow      = InferSelectModel<typeof leagues>;
 export type MatchEventRow  = InferSelectModel<typeof matchEvents>;
 
 export interface MatchWithRelations {
-  match:    MatchRow;
-  homeTeam: Pick<TeamRow, 'id' | 'name' | 'crestUrl' | 'slug'>;
-  league:   Pick<LeagueRow, 'id' | 'name' | 'countryCode' | 'slug'>;
+  id:        string;
+  slug:      string;
+  status:    string;
+  minute:    number | null;
+  kickoffAt: Date | string;
+  season:    string;
+  round:     string | null;
+  venue:     string | null;
+  score:     { home: number; away: number; homeHt: number | null; awayHt: number | null };
+  homeTeam:  { id: string; name: string; crestUrl: string | null; slug: string };
+  awayTeam:  { id: string; name: string; crestUrl: string | null; slug: string };
+  league:    { id: string; name: string; countryCode: string; slug: string };
 }
 
 export interface MatchResponse {

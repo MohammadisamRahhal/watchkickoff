@@ -3,7 +3,7 @@
  */
 import { db } from '@infrastructure/database/client.js';
 import { matches, teams, leagues, matchEvents } from '@infrastructure/database/schema.js';
-import { eq, and, gte, lt, inArray } from 'drizzle-orm';
+import { eq, and, gte, lt, inArray, sql } from 'drizzle-orm';
 import { createLogger } from '@core/logger.js';
 import type { MatchWithRelations } from './matches.types.js';
 
@@ -17,19 +17,29 @@ export const matchesQueries = {
     const now = new Date();
     const start = new Date(now); start.setUTCHours(0, 0, 0, 0);
     const end   = new Date(now); end.setUTCHours(23, 59, 59, 999);
-    const homeTeams = teams.$inferSelect ? teams : teams;
-    const awayTeams = db.select({ id: teams.id, name: teams.name, crestUrl: teams.crestUrl, slug: teams.slug }).from(teams).as('away_teams');
-    const rows = await db.select({
-      match:    matches,
-      homeTeam: { id: teams.id, name: teams.name, crestUrl: teams.crestUrl, slug: teams.slug },
-      awayTeam: { id: awayTeams.id, name: awayTeams.name, crestUrl: awayTeams.crestUrl, slug: awayTeams.slug },
-      league:   { id: leagues.id, name: leagues.name, countryCode: leagues.countryCode, slug: leagues.slug },
-    }).from(matches)
-      .innerJoin(teams,     eq(matches.homeTeamId, teams.id))
-      .innerJoin(awayTeams, eq(matches.awayTeamId, awayTeams.id))
-      .innerJoin(leagues,   eq(matches.leagueId, leagues.id))
-      .where(and(gte(matches.kickoffAt, start), lt(matches.kickoffAt, end)));
-    return rows as unknown as MatchWithRelations[];
+    const { rows } = await db.execute(sql`
+      SELECT
+        m.id, m.slug, m.status, m.minute, m.kickoff_at,
+        m.home_score, m.away_score, m.home_score_ht, m.away_score_ht,
+        m.season, m.round, m.venue, m.raw_status,
+        ht.id   AS ht_id,   ht.name   AS ht_name,   ht.crest_url AS ht_crest, ht.slug AS ht_slug,
+        at.id   AS at_id,   at.name   AS at_name,   at.crest_url AS at_crest, at.slug AS at_slug,
+        l.id    AS l_id,    l.name    AS l_name,    l.country_code AS l_country, l.slug AS l_slug
+      FROM matches m
+      JOIN teams ht  ON ht.id  = m.home_team_id
+      JOIN teams at  ON at.id  = m.away_team_id
+      JOIN leagues l ON l.id   = m.league_id
+      WHERE m.kickoff_at >= ${start} AND m.kickoff_at < ${end}
+      ORDER BY m.kickoff_at ASC
+    `);
+    return (rows as any[]).map(r => ({
+      id: r.id, slug: r.slug, status: r.status, minute: r.minute,
+      kickoffAt: r.kickoff_at, season: r.season, round: r.round, venue: r.venue,
+      score: { home: r.home_score, away: r.away_score, homeHt: r.home_score_ht, awayHt: r.away_score_ht },
+      homeTeam: { id: r.ht_id, name: r.ht_name, crestUrl: r.ht_crest, slug: r.ht_slug },
+      awayTeam: { id: r.at_id, name: r.at_name, crestUrl: r.at_crest, slug: r.at_slug },
+      league:   { id: r.l_id,  name: r.l_name,  countryCode: r.l_country, slug: r.l_slug },
+    })) as unknown as MatchWithRelations[];
   },
 
   async findLiveMatches(): Promise<MatchWithRelations[]> {
