@@ -19,6 +19,8 @@ export async function registerMatchesRoutes(fastify: FastifyInstance): Promise<v
       id:         m.id,
       slug:       m.slug,
       leagueId:   m.league.id,
+      leagueName: m.league.name,
+      leagueSlug: m.league.slug,
       homeTeamId: m.homeTeam.id,
       awayTeamId: m.awayTeam.id,
       kickoffAt:  m.kickoffAt,

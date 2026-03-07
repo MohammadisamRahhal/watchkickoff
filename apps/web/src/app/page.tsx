@@ -24,10 +24,12 @@ export default async function HomePage() {
 
   // Group matches by leagueId
   const groups = new Map<string, MatchSummary[]>();
+  const leagueNames = new Map<string, string>();
   for (const m of matches) {
     const existing = groups.get(m.leagueId) ?? [];
     existing.push(m);
     groups.set(m.leagueId, existing);
+    if ((m as any).leagueName) leagueNames.set(m.leagueId, (m as any).leagueName);
   }
 
   const today = formatDate(new Date());
@@ -54,7 +56,6 @@ export default async function HomePage() {
       ) : (
         <div>
           {[...groups.entries()].map(([leagueId, leagueMatches]) => {
-            // Use league info from first match if available
             const first = leagueMatches[0];
             // League name and flag not available in MatchSummary directly —
             // show league ID abbreviated; real impl would join league data
@@ -64,7 +65,7 @@ export default async function HomePage() {
             return (
               <MatchGroup
                 key={leagueId}
-                label={`League · ${leagueId.slice(0, 8)}`}
+                label={leagueNames.get(leagueId) ?? `League · ${leagueId.slice(0, 8)}`}
                 flag={first ? countryFlag('GB') : undefined}
               >
                 {leagueMatches.map((match) => (
