@@ -34,6 +34,15 @@ export interface ProviderFixture {
   externalLeagueId:   string;
   externalHomeTeamId: string;
   externalAwayTeamId: string;
+  leagueName?:        string;
+  leagueCountryCode?: string;
+  leagueLogo?:        string;
+  homeTeamName?:      string;
+  homeTeamCrest?:     string;
+  homeTeamCountry?:   string;
+  awayTeamName?:      string;
+  awayTeamCrest?:     string;
+  awayTeamCountry?:   string;
   kickoffAt:          Date;
   status:             MatchStatus;
   homeScore:          number;

@@ -22,18 +22,26 @@ async function syncTodayFixtures(): Promise<void> {
   logger.info({ count: fixtures.length }, 'Fixtures received');
   for (const fx of fixtures) {
     try {
+      const leagueName = fx.leagueName ?? fx.externalLeagueId;
+      const leagueCode = (fx.leagueCountryCode ?? 'WW').slice(0, 2).toUpperCase();
       const leagueId = await matchesQueries.upsertLeague({
-        externalId: fx.externalLeagueId, name: fx.externalLeagueId,
-        countryCode: 'WW', season: fx.season, type: 'LEAGUE',
-        slug: makeLeagueSlug(fx.externalLeagueId, fx.externalLeagueId, fx.season),
+        externalId: fx.externalLeagueId, name: leagueName,
+        countryCode: leagueCode, season: fx.season, type: 'LEAGUE',
+        slug: makeLeagueSlug(fx.externalLeagueId, leagueName, fx.season),
       });
       const homeTeamId = await matchesQueries.upsertTeam({
-        externalId: fx.externalHomeTeamId, name: fx.externalHomeTeamId,
-        countryCode: 'WW', slug: makeTeamSlug(fx.externalHomeTeamId, fx.externalHomeTeamId),
+        externalId: fx.externalHomeTeamId,
+        name: fx.homeTeamName ?? fx.externalHomeTeamId,
+        countryCode: (fx.homeTeamCountry ?? 'WW').slice(0, 2).toUpperCase(),
+        crestUrl: fx.homeTeamCrest,
+        slug: makeTeamSlug(fx.externalHomeTeamId, fx.homeTeamName ?? fx.externalHomeTeamId),
       });
       const awayTeamId = await matchesQueries.upsertTeam({
-        externalId: fx.externalAwayTeamId, name: fx.externalAwayTeamId,
-        countryCode: 'WW', slug: makeTeamSlug(fx.externalAwayTeamId, fx.externalAwayTeamId),
+        externalId: fx.externalAwayTeamId,
+        name: fx.awayTeamName ?? fx.externalAwayTeamId,
+        countryCode: (fx.awayTeamCountry ?? 'WW').slice(0, 2).toUpperCase(),
+        crestUrl: fx.awayTeamCrest,
+        slug: makeTeamSlug(fx.externalAwayTeamId, fx.awayTeamName ?? fx.externalAwayTeamId),
       });
       await matchesQueries.upsertMatch({
         externalId: fx.externalId, leagueId, homeTeamId, awayTeamId,
