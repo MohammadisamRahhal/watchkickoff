@@ -17,10 +17,10 @@ async function main(): Promise<void> {
   const fixtureSyncQueue = new Queue('fixture-sync', { connection: bullmqConnection });
   await fixtureSyncQueue.upsertJobScheduler(
     'fixture-sync-every-5min',
-    { every: 5 * 60 * 1000 },
+    { every: 30 * 60 * 1000 },
     { name: 'fixture-sync', data: {} }
   );
-  logger.info('fixture-sync scheduler registered (every 5 min)');
+  logger.info('fixture-sync scheduler registered (every 30 min)');
 
   await fixtureSyncQueue.add('fixture-sync-startup', {});
   logger.info('fixture-sync startup job queued');
