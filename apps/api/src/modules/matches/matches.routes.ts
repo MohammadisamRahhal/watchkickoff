@@ -3,7 +3,7 @@
  */
 import type { FastifyInstance } from 'fastify';
 import { matchesService } from './matches.service.js';
-import { MatchesIdParamsSchema } from './matches.schema.js';
+import { MatchesIdParamsSchema, MatchesSlugParamsSchema } from './matches.schema.js';
 import { createLogger } from '@core/logger.js';
 
 const logger = createLogger('matches-routes');
@@ -42,15 +42,17 @@ export async function registerMatchesRoutes(fastify: FastifyInstance): Promise<v
     const data = await matchesService.getLiveMatches();
     return reply.send(data);
   });
-  fastify.get('/:id', async (req, reply) => {
-    const { id } = MatchesIdParamsSchema.parse((req as any).params);
-    const match = await matchesService.getMatchById(id);
+  fastify.get('/:slug', async (req, reply) => {
+    const { slug } = MatchesSlugParamsSchema.parse((req as any).params);
+    const match = await matchesService.getMatchBySlug(slug);
     if (!match) return reply.code(404).send({ error: 'Match not found' });
     return reply.send({ data: match });
   });
-  fastify.get('/:id/events', async (req, reply) => {
-    const { id } = MatchesIdParamsSchema.parse((req as any).params);
-    const events = await matchesService.getMatchEvents(id);
+  fastify.get('/:slug/events', async (req, reply) => {
+    const { slug } = MatchesSlugParamsSchema.parse((req as any).params);
+    const match = await matchesService.getMatchBySlug(slug);
+    if (!match) return reply.code(404).send({ error: 'Match not found' });
+    const events = await matchesService.getMatchEvents(match.id);
     return reply.send({ data: events, count: events.length });
   });
   logger.debug('Matches routes registered');

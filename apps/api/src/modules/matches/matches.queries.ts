@@ -54,6 +54,34 @@ export const matchesQueries = {
     return rows as unknown as MatchWithRelations[];
   },
 
+  async findBySlug(slug: string): Promise<MatchWithRelations | null> {
+    const { rows } = await db.execute(sql`
+      SELECT
+        m.id, m.slug, m.status, m.minute, m.kickoff_at,
+        m.home_score, m.away_score, m.home_score_ht, m.away_score_ht,
+        m.season, m.round, m.venue, m.raw_status,
+        ht.id AS ht_id, ht.name AS ht_name, ht.crest_url AS ht_crest, ht.slug AS ht_slug,
+        at.id AS at_id, at.name AS at_name, at.crest_url AS at_crest, at.slug AS at_slug,
+        l.id  AS l_id,  l.name  AS l_name,  l.country_code AS l_country, l.slug AS l_slug
+      FROM matches m
+      JOIN teams ht  ON ht.id = m.home_team_id
+      JOIN teams at  ON at.id = m.away_team_id
+      JOIN leagues l ON l.id  = m.league_id
+      WHERE m.slug = ${slug}
+      LIMIT 1
+    `);
+    if (!(rows as any[]).length) return null;
+    const r = (rows as any[])[0];
+    return {
+      id: r.id, slug: r.slug, status: r.status, minute: r.minute,
+      kickoffAt: r.kickoff_at, season: r.season, round: r.round, venue: r.venue,
+      score: { home: r.home_score, away: r.away_score, homeHt: r.home_score_ht, awayHt: r.away_score_ht },
+      homeTeam: { id: r.ht_id, name: r.ht_name, crestUrl: r.ht_crest, slug: r.ht_slug },
+      awayTeam: { id: r.at_id, name: r.at_name, crestUrl: r.at_crest, slug: r.at_slug },
+      league:   { id: r.l_id,  name: r.l_name,  countryCode: r.l_country, slug: r.l_slug },
+    } as unknown as MatchWithRelations;
+  },
+
   async findById(id: string): Promise<MatchWithRelations | null> {
     const rows = await db.select({
       match:    matches,

@@ -41,9 +41,21 @@ export async function getTodayMatches(): Promise<MatchSummary[]> {
 
 /** Single match by slug — used on the match detail page. */
 export async function getMatchBySlug(slug: string): Promise<MatchDetail> {
-  return apiFetch<MatchDetail>(`/matches/${slug}`, {
+  const res = await apiFetch<{ data: any }>(`/matches/${slug}`, {
     next: { revalidate: 30 },
   });
+  const d = (res as any).data ?? res;
+  // Normalize to MatchDetail shape expected by the page
+  return {
+    ...d,
+    homeTeamId:   d.homeTeam?.id,
+    awayTeamId:   d.awayTeam?.id,
+    homeScore:    d.score?.home ?? 0,
+    awayScore:    d.score?.away ?? 0,
+    homeScoreHt:  d.score?.homeHt ?? null,
+    awayScoreHt:  d.score?.awayHt ?? null,
+    events:       d.events ?? [],
+  } as unknown as MatchDetail;
 }
 
 /** Live matches — short TTL, revalidated every 15 s. */

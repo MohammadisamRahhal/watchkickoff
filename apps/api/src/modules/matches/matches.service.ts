@@ -47,6 +47,12 @@ export const matchesService = {
     return result;
   },
 
+  async getMatchBySlug(slug: string): Promise<MatchResponse | null> {
+    const rows = await matchesQueries.findBySlug(slug);
+    if (!rows) return null;
+    return formatMatch(rows);
+  },
+
   async getMatchById(id: string): Promise<MatchResponse | null> {
     const cached = await matchesCache.getMatch(id);
     if (cached) { logger.debug({ id }, 'getMatchById: cache hit'); return cached; }
