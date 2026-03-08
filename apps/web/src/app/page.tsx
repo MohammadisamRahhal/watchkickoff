@@ -59,14 +59,14 @@ export default async function HomePage() {
             const first = leagueMatches[0];
             // League name and flag not available in MatchSummary directly —
             // show league ID abbreviated; real impl would join league data
-            const countryCode = 'GB'; // placeholder; populated when API returns league data
-            void countryCode;
+                    const leagueName = (first as any)?.leagueName ?? leagueNames.get(leagueId) ?? `League · ${leagueId.slice(0, 8)}`;
+            const countryCode = (first as any)?.leagueCountryCode ?? 'WW';
 
             return (
               <MatchGroup
                 key={leagueId}
-                label={leagueNames.get(leagueId) ?? `League · ${leagueId.slice(0, 8)}`}
-                flag={first ? countryFlag('GB') : undefined}
+                label={leagueName}
+                flag={countryFlag(countryCode)}
               >
                 {leagueMatches.map((match) => (
                   <MatchRow key={match.id} match={match} />

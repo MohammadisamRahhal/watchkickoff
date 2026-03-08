@@ -18,9 +18,10 @@ export async function registerMatchesRoutes(fastify: FastifyInstance): Promise<v
     const summary = data.map(m => ({
       id:         m.id,
       slug:       m.slug,
-      leagueId:   m.league.id,
-      leagueName: m.league.name,
-      leagueSlug: m.league.slug,
+      leagueId:          m.league.id,
+      leagueName:        m.league.name,
+      leagueSlug:        m.league.slug,
+      leagueCountryCode: m.league.countryCode,
       homeTeamId: m.homeTeam.id,
       awayTeamId: m.awayTeam.id,
       kickoffAt:  m.kickoffAt,

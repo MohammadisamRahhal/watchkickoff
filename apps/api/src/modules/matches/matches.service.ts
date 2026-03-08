@@ -19,6 +19,9 @@ function formatMatch(row: MatchWithRelations): MatchResponse {
     awayTeam:  { id: row.awayTeam.id, name: row.awayTeam.name, crestUrl: row.awayTeam.crestUrl ?? null, slug: row.awayTeam.slug },
     score:     { home: row.score?.home ?? 0, away: row.score?.away ?? 0, homeHt: row.score?.homeHt ?? null, awayHt: row.score?.awayHt ?? null },
     league:    { id: row.league.id, name: row.league.name, countryCode: row.league.countryCode, slug: row.league.slug },
+    leagueName:        row.league.name,
+    leagueCountryCode: row.league.countryCode,
+    leagueSlug:        row.league.slug,
     venue:     row.venue ?? null,
     round:     row.round ?? null,
   };

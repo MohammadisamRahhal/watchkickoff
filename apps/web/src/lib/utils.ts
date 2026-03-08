@@ -50,6 +50,7 @@ export function zoneClass(zone: string): string {
 
 /** Country code → flag emoji. Works in all modern browsers. */
 export function countryFlag(code: string): string {
+  if (!code || code === 'WW' || code.length !== 2) return '🌍';
   return code
     .toUpperCase()
     .split('')

@@ -34,8 +34,11 @@ export interface MatchResponse {
   awayTeam:   { id: string; name: string; crestUrl: string | null; slug: string };
   score:      { home: number; away: number; homeHt: number | null; awayHt: number | null };
   league:     { id: string; name: string; countryCode: string; slug: string };
-  venue:      string | null;
-  round:      string | null;
+  venue:             string | null;
+  round:             string | null;
+  leagueName:        string;
+  leagueCountryCode: string;
+  leagueSlug:        string;
 }
 
 export interface MatchEventResponse {
