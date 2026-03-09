@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { getLeagueBySlug, getLeagueMatches, getStandings } from '@/lib/api';
 import { MatchRow, MatchGroup, StandingsTable, ErrorBanner, EmptyState, TeamCrest } from '@/components/ui';
-import { countryFlag } from '@/lib/utils';
+import { countryFlag, formatDate, isLive, isFinished } from '@/lib/utils';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -13,12 +13,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const league = await getLeagueBySlug(slug);
     return {
-      title: league.name,
-      description: `Fixtures, results and standings for ${league.name} ${league.season}.`,
+      title: `${league.name} ${league.season} — Fixtures & Standings`,
+      description: `Live scores, fixtures, results and standings for ${league.name} ${league.season}.`,
     };
-  } catch {
-    return { title: 'League' };
-  }
+  } catch { return { title: 'League' }; }
 }
 
 export const revalidate = 300;
@@ -27,142 +25,180 @@ export default async function LeaguePage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { tab = 'fixtures' } = await searchParams;
 
-  let leagueError: string | null = null;
-  let matchesError: string | null = null;
-  let standingsError: string | null = null;
-
   const [leagueResult, matchesResult, standingsResult] = await Promise.allSettled([
     getLeagueBySlug(slug),
     getLeagueMatches(slug),
     getStandings(slug),
   ]);
 
-  const league   = leagueResult.status   === 'fulfilled' ? leagueResult.value   : null;
-  const matches  = matchesResult.status  === 'fulfilled' ? matchesResult.value  : [];
+  const league    = leagueResult.status   === 'fulfilled' ? leagueResult.value   : null;
+  const matches   = matchesResult.status  === 'fulfilled' ? matchesResult.value  : [];
   const standings = standingsResult.status === 'fulfilled' ? standingsResult.value : [];
 
-  if (!league) leagueError = 'League not found.';
-  if (matchesResult.status === 'rejected') matchesError = 'Could not load fixtures.';
-  if (standingsResult.status === 'rejected') standingsError = 'Could not load standings.';
+  if (!league) return (
+    <div className="container" style={{ paddingTop: 28 }}>
+      <ErrorBanner message="League not found." />
+    </div>
+  );
 
-  // Build teamId lookup maps from matches for the standings table
-  const teamNames:  Record<string, string>       = {};
+  // Group matches by date
+  const byDate = new Map<string, typeof matches>();
+  for (const m of matches) {
+    const date = formatDate(m.kickoffAt);
+    if (!byDate.has(date)) byDate.set(date, []);
+    byDate.get(date)!.push(m);
+  }
+
+  // Live matches first
+  const live     = matches.filter(m => isLive(m.status));
+  const finished = matches.filter(m => isFinished(m.status));
+  const upcoming = matches.filter(m => !isLive(m.status) && !isFinished(m.status));
+
+  // Build team lookup for standings
   const teamCrests: Record<string, string | null> = {};
+  const teamNames:  Record<string, string> = {};
   for (const m of matches) {
     teamNames[m.homeTeamId]  = m.homeTeam.name;
     teamNames[m.awayTeamId]  = m.awayTeam.name;
     teamCrests[m.homeTeamId] = m.homeTeam.crestUrl;
     teamCrests[m.awayTeamId] = m.awayTeam.crestUrl;
   }
+  // Also use standings teamName/teamCrest
+  for (const s of standings as any[]) {
+    if (s.teamName)  teamNames[s.teamId]  = s.teamName;
+    if (s.teamCrest) teamCrests[s.teamId] = s.teamCrest;
+  }
 
   const tabs = [
-    { id: 'fixtures',  label: 'Fixtures' },
-    { id: 'standings', label: 'Standings' },
+    { id: 'fixtures',  label: 'Fixtures',  count: matches.length },
+    { id: 'standings', label: 'Standings', count: standings.length },
   ];
 
+  const flag = countryFlag(league.countryCode);
+
   return (
-    <div className="container" style={{ paddingTop: 28, paddingBottom: 48 }}>
-      {leagueError ? (
-        <ErrorBanner message={leagueError} />
-      ) : league ? (
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-            <span style={{ fontSize: 24 }}>{countryFlag(league.countryCode)}</span>
+    <div className="container" style={{ paddingTop: 20, paddingBottom: 60 }}>
+
+      {/* Breadcrumb */}
+      <nav className="breadcrumb">
+        <a href="/">Today</a>
+        <span className="breadcrumb__sep">›</span>
+        <a href="/leagues">Leagues</a>
+        <span className="breadcrumb__sep">›</span>
+        <span style={{ color: 'var(--text-muted)' }}>{league.name}</span>
+      </nav>
+
+      {/* League header */}
+      <div className="match-hero" style={{ marginBottom: 20, padding: '20px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <span style={{ fontSize: 40 }}>{flag}</span>
+          <div>
             <h1 style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 28, fontWeight: 700,
-              letterSpacing: '0.03em',
-            }}>
-              {league.name}
-            </h1>
+              fontFamily: 'var(--font-display)', fontSize: 28,
+              fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1,
+            }}>{league.name.toUpperCase()}</h1>
+            <div style={{ marginTop: 4, color: 'var(--text-muted)', fontSize: 13, display: 'flex', gap: 12 }}>
+              <span>{league.season}</span>
+              <span>·</span>
+              <span>{league.type}</span>
+              {standings.length > 0 && <><span>·</span><span>{standings.length} teams</span></>}
+            </div>
           </div>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-            {league.season} · {league.type}
-          </p>
+          {live.length > 0 && (
+            <div style={{ marginLeft: 'auto' }}>
+              <span className="status-badge live">
+                <span className="live-dot" />{live.length} LIVE
+              </span>
+            </div>
+          )}
         </div>
-      ) : null}
+      </div>
 
       {/* Tabs */}
       <div style={{
-        display: 'flex', gap: 2,
+        display: 'flex', gap: 0,
         borderBottom: '1px solid var(--border)',
         marginBottom: 20,
       }}>
-        {tabs.map(({ id, label }) => (
-          <a
-            key={id}
-            href={`/leagues/${slug}?tab=${id}`}
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 13, fontWeight: 700,
-              letterSpacing: '0.06em',
-              padding: '8px 16px',
-              color: tab === id ? 'var(--text)' : 'var(--text-dim)',
-              borderBottom: tab === id ? '2px solid var(--green)' : '2px solid transparent',
-              marginBottom: -1,
-              transition: 'color 0.12s',
-            }}
-          >
-            {label}
+        {tabs.map(({ id, label, count }) => (
+          <a key={id} href={`/leagues/${slug}?tab=${id}`} style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 13, fontWeight: 700,
+            letterSpacing: '0.06em',
+            padding: '10px 20px',
+            color: tab === id ? 'var(--text)' : 'var(--text-dim)',
+            borderBottom: tab === id ? '2px solid var(--green)' : '2px solid transparent',
+            marginBottom: -1,
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            {label.toUpperCase()}
+            {count > 0 && (
+              <span style={{
+                fontSize: 11, fontWeight: 700,
+                background: tab === id ? 'var(--green)' : 'var(--bg-elevated)',
+                color: tab === id ? '#000' : 'var(--text-dim)',
+                padding: '2px 6px', borderRadius: 999,
+              }}>{count}</span>
+            )}
           </a>
         ))}
       </div>
 
-      {/* Fixtures tab */}
+      {/* FIXTURES TAB */}
       {tab === 'fixtures' && (
-        <div>
-          {matchesError && <ErrorBanner message={matchesError} />}
-          {matches.length === 0 && !matchesError ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {matches.length === 0 ? (
             <EmptyState message="No fixtures available for this league." />
           ) : (
-            <MatchGroup label={league?.name ?? slug}>
-              {matches.map((match) => (
-                <MatchRow key={match.id} match={match} />
-              ))}
-            </MatchGroup>
+            <>
+              {live.length > 0 && (
+                <MatchGroup label="Live Now" flag="🔴" count={live.length}>
+                  {live.map(m => <MatchRow key={m.id} match={m} />)}
+                </MatchGroup>
+              )}
+              {upcoming.length > 0 && (
+                <MatchGroup label="Upcoming" flag="🗓" count={upcoming.length}>
+                  {upcoming.map(m => <MatchRow key={m.id} match={m} />)}
+                </MatchGroup>
+              )}
+              {finished.length > 0 && (
+                <MatchGroup label="Results" flag="✓" count={finished.length}>
+                  {finished.map(m => <MatchRow key={m.id} match={m} />)}
+                </MatchGroup>
+              )}
+            </>
           )}
         </div>
       )}
 
-      {/* Standings tab */}
+      {/* STANDINGS TAB */}
       {tab === 'standings' && (
         <div>
-          {standingsError && <ErrorBanner message={standingsError} />}
-          {standings.length === 0 && !standingsError ? (
+          {standings.length === 0 ? (
             <EmptyState message="Standings not available yet." />
           ) : (
-            <div style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius)',
-              overflow: 'hidden',
-            }}>
-              <StandingsTable
-                rows={standings}
-                teamNames={teamNames}
-                teamCrests={teamCrests}
-              />
-            </div>
-          )}
-
-          {/* Zone legend */}
-          {standings.length > 0 && (
-            <div style={{
-              marginTop: 12,
-              display: 'flex', gap: 20, flexWrap: 'wrap',
-              fontSize: 12, color: 'var(--text-muted)',
-            }}>
-              {[
-                { cls: 'zone-promotion',    label: 'Promotion' },
-                { cls: 'zone-championship', label: 'Playoff' },
-                { cls: 'zone-relegation',   label: 'Relegation' },
-              ].map(({ cls, label }) => (
-                <span key={cls} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className={cls} style={{ display: 'inline-block', width: 3, height: 14 }} />
-                  {label}
-                </span>
-              ))}
-            </div>
+            <>
+              <div className="card" style={{ overflow: 'hidden', marginBottom: 12 }}>
+                <StandingsTable
+                  rows={standings}
+                  teamNames={teamNames}
+                  teamCrests={teamCrests}
+                />
+              </div>
+              {/* Zone legend */}
+              <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 12, color: 'var(--text-muted)' }}>
+                {[
+                  { cls: 'zone-promotion',    label: 'Promotion / Champions League' },
+                  { cls: 'zone-championship', label: 'Europa / Playoff' },
+                  { cls: 'zone-relegation',   label: 'Relegation' },
+                ].map(({ cls, label }) => (
+                  <span key={cls} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span className={cls} style={{ display: 'inline-block', width: 3, height: 14, borderRadius: 2 }} />
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
