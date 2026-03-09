@@ -104,14 +104,29 @@ export const matchesQueries = {
     externalId: string; name: string; countryCode: string;
     season: string; type: string; slug: string;
   }): Promise<string> {
-    const existing = await db.select({ id: leagues.id }).from(leagues)
-      .where(eq(leagues.slug, data.slug)).limit(1);
-    if (existing[0]) return existing[0].id;
+    const existing = await db.select({ id: leagues.id, name: leagues.name })
+      .from(leagues)
+      .where(sql`provider_ref->>'apiFootball' = ${data.externalId} AND season = ${data.season}`)
+      .limit(1);
+    if (existing[0]) {
+      // Always update name/countryCode in case it was previously stored as numeric ID
+      const needsUpdate = existing[0].name === data.externalId || /^\d+$/.test(existing[0].name);
+      if (needsUpdate && data.name !== data.externalId) {
+        await db.update(leagues).set({
+          name: data.name,
+          countryCode: data.countryCode.slice(0, 2).toUpperCase(),
+        }).where(eq(leagues.id, existing[0].id));
+      }
+      return existing[0].id;
+    }
     const inserted = await db.insert(leagues).values({
       name: data.name, slug: data.slug,
       countryCode: data.countryCode.slice(0, 2).toUpperCase(),
       season: data.season, type: data.type as 'LEAGUE' | 'CUP' | 'TOURNAMENT',
       providerRef: { apiFootball: data.externalId },
+    }).onConflictDoUpdate({
+      target: leagues.slug,
+      set: { name: data.name, countryCode: data.countryCode.slice(0, 2).toUpperCase() },
     }).returning({ id: leagues.id });
     return inserted[0]!.id;
   },
@@ -120,14 +135,30 @@ export const matchesQueries = {
     externalId: string; name: string; countryCode: string;
     slug: string; crestUrl?: string;
   }): Promise<string> {
-    const existing = await db.select({ id: teams.id }).from(teams)
-      .where(eq(teams.slug, data.slug)).limit(1);
-    if (existing[0]) return existing[0].id;
+    const existing = await db.select({ id: teams.id, name: teams.name })
+      .from(teams)
+      .where(sql`provider_ref->>'apiFootball' = ${data.externalId}`)
+      .limit(1);
+    if (existing[0]) {
+      // Always update name/crest in case it was previously stored as numeric ID
+      const needsUpdate = existing[0].name === data.externalId || /^\d+$/.test(existing[0].name);
+      if (needsUpdate && data.name !== data.externalId) {
+        await db.update(teams).set({
+          name: data.name,
+          countryCode: (data.countryCode ?? 'WW').slice(0, 2).toUpperCase(),
+          crestUrl: data.crestUrl,
+        }).where(eq(teams.id, existing[0].id));
+      }
+      return existing[0].id;
+    }
     const inserted = await db.insert(teams).values({
       name: data.name, slug: data.slug,
       countryCode: (data.countryCode ?? 'WW').slice(0, 2).toUpperCase(),
       crestUrl: data.crestUrl,
       providerRef: { apiFootball: data.externalId },
+    }).onConflictDoUpdate({
+      target: teams.slug,
+      set: { name: data.name, crestUrl: data.crestUrl, countryCode: (data.countryCode ?? 'WW').slice(0, 2).toUpperCase() },
     }).returning({ id: teams.id });
     return inserted[0]!.id;
   },
