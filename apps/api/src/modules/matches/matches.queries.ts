@@ -59,13 +59,12 @@ export const matchesQueries = {
       ORDER BY m.kickoff_at
     `);
     return rows.map((r: any) => ({
-      match: {
-        id: r.id, slug: r.slug, status: r.status, minute: r.minute,
-        kickoffAt: r.kickoff_at, homeScore: r.home_score, awayScore: r.away_score,
-        homeScoreHt: r.home_score_ht, awayScoreHt: r.away_score_ht,
-        season: r.season, round: r.round, venue: r.venue, rawStatus: r.raw_status,
-        homeTeamId: r.ht_id, awayTeamId: r.at_id, leagueId: r.l_id,
-      },
+      id: r.id, slug: r.slug, status: r.status, minute: r.minute,
+      kickoffAt: r.kickoff_at, homeScore: r.home_score, awayScore: r.away_score,
+      homeScoreHt: r.home_score_ht, awayScoreHt: r.away_score_ht,
+      season: r.season, round: r.round, venue: r.venue, rawStatus: r.raw_status,
+      homeTeamId: r.ht_id, awayTeamId: r.at_id, leagueId: r.l_id,
+      score: { home: r.home_score ?? 0, away: r.away_score ?? 0, homeHt: r.home_score_ht ?? null, awayHt: r.away_score_ht ?? null },
       homeTeam: { id: r.ht_id, name: r.ht_name, crestUrl: r.ht_crest, slug: r.ht_slug },
       awayTeam: { id: r.at_id, name: r.at_name, crestUrl: r.at_crest, slug: r.at_slug },
       league:   { id: r.l_id,  name: r.l_name,  countryCode: r.l_country, slug: r.l_slug },
