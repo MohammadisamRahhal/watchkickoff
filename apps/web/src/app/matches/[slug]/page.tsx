@@ -1,287 +1,253 @@
 import type { Metadata } from 'next';
 import { getMatchBySlug } from '@/lib/api';
 import { TeamCrest, ErrorBanner } from '@/components/ui';
-import { statusLabel, isLive, formatDate, formatKickoff } from '@/lib/utils';
+import { statusLabel, isLive, isFinished, formatDate, formatKickoff, countryFlag } from '@/lib/utils';
 import type { MatchEvent } from '@watchkickoff/shared';
 import { EVENT_TYPE } from '@watchkickoff/shared';
 
-interface Props {
-  params: Promise<{ slug: string }>;
-}
+interface Props { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { slug } = await params;
     const match = await getMatchBySlug(slug);
     const title = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
-    return {
-      title,
-      description: `${title} · ${match.league.name} · ${match.season}`,
-    };
-  } catch {
-    return { title: 'Match' };
-  }
+    return { title, description: `${title} · ${match.league.name} · ${match.season}` };
+  } catch { return { title: 'Match' }; }
 }
 
 export const revalidate = 30;
 
-/** Map event type to a short glyph. */
 function eventGlyph(type: MatchEvent['eventType']): string {
   switch (type) {
     case EVENT_TYPE.GOAL:           return '⚽';
-    case EVENT_TYPE.OWN_GOAL:       return '⚽ OG';
-    case EVENT_TYPE.PENALTY_SCORED: return '⚽ (P)';
-    case EVENT_TYPE.PENALTY_MISSED: return '✗ (P)';
+    case EVENT_TYPE.OWN_GOAL:       return '⚽';
+    case EVENT_TYPE.PENALTY_SCORED: return '⚽';
+    case EVENT_TYPE.PENALTY_MISSED: return '✗';
     case EVENT_TYPE.YELLOW:         return '🟨';
     case EVENT_TYPE.SECOND_YELLOW:  return '🟨🟥';
     case EVENT_TYPE.RED:            return '🟥';
-    case EVENT_TYPE.SUB_IN:         return '↑';
-    case EVENT_TYPE.SUB_OUT:        return '↓';
+    case EVENT_TYPE.SUB_IN:         return '↕';
     case EVENT_TYPE.VAR:            return 'VAR';
     default:                        return '·';
   }
+}
+
+function eventLabel(type: MatchEvent['eventType']): string {
+  switch (type) {
+    case EVENT_TYPE.OWN_GOAL:       return 'Own Goal';
+    case EVENT_TYPE.PENALTY_SCORED: return 'Penalty';
+    case EVENT_TYPE.PENALTY_MISSED: return 'Penalty Missed';
+    case EVENT_TYPE.SUB_IN:         return 'Substitution';
+    case EVENT_TYPE.VAR:            return 'VAR';
+    default:                        return '';
+  }
+}
+
+function isGoalEvent(type: string) {
+  return [EVENT_TYPE.GOAL, EVENT_TYPE.OWN_GOAL, EVENT_TYPE.PENALTY_SCORED].includes(type as any);
 }
 
 export default async function MatchPage({ params }: Props) {
   const { slug } = await params;
   let match = null;
   let error: string | null = null;
+  try { match = await getMatchBySlug(slug); }
+  catch { error = 'Match not found.'; }
 
-  try {
-    match = await getMatchBySlug(slug);
-  } catch {
-    error = 'Match not found or could not be loaded.';
-  }
+  if (error || !match) return (
+    <div className="container" style={{ paddingTop: 28 }}>
+      <ErrorBanner message={error ?? 'Unknown error.'} />
+    </div>
+  );
 
-  if (error || !match) {
-    return (
-      <div className="container" style={{ paddingTop: 28 }}>
-        <ErrorBanner message={error ?? 'Unknown error.'} />
-      </div>
-    );
-  }
-
-  const live     = isLive(match.status);
+  const live      = isLive(match.status);
+  const finished  = isFinished(match.status);
   const statusTxt = statusLabel(match.status, match.minute);
-
-  // Partition events by team
-  const homeEvents = match.events.filter((e) => e.teamId === match!.homeTeamId);
-  const awayEvents = match.events.filter((e) => e.teamId === match!.awayTeamId);
+  const leagueFlag = countryFlag((match as any).leagueCountryCode ?? 'WW');
+  const homeEvents = match.events.filter(e => e.teamId === match!.homeTeamId);
+  const awayEvents = match.events.filter(e => e.teamId === match!.awayTeamId);
+  const goalEvents = match.events.filter(e => isGoalEvent(e.eventType));
 
   return (
-    <div className="container" style={{ paddingTop: 28, paddingBottom: 48 }}>
+    <div className="container" style={{ paddingTop: 20, paddingBottom: 60 }}>
+
       {/* Breadcrumb */}
-      <nav style={{ fontSize: 13, color: 'var(--text-dim)', marginBottom: 20 }}>
-        <a href="/leagues" style={{ color: 'var(--text-dim)' }}>Leagues</a>
-        {' › '}
-        <a href={`/leagues/${match.league.slug}`} style={{ color: 'var(--text-muted)' }}>
-          {match.league.name}
-        </a>
-        {' › '}
+      <nav className="breadcrumb">
+        <a href="/">Today</a>
+        <span className="breadcrumb__sep">›</span>
+        <a href={`/leagues/${match.league.slug}`}>{leagueFlag} {match.league.name}</a>
+        <span className="breadcrumb__sep">›</span>
         <span style={{ color: 'var(--text-muted)' }}>
-          {match.homeTeam.shortName ?? match.homeTeam.name} vs {match.awayTeam.shortName ?? match.awayTeam.name}
+          {match.homeTeam.name} vs {match.awayTeam.name}
         </span>
       </nav>
 
-      {/* Score card */}
-      <div style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-lg)',
-        overflow: 'hidden',
-        marginBottom: 24,
-      }}>
+      {/* Hero score card */}
+      <div className="match-hero">
+
         {/* League strip */}
-        <div style={{
-          padding: '8px 20px',
-          background: 'var(--bg-elevated)',
-          borderBottom: '1px solid var(--border)',
-          fontSize: 12,
-          color: 'var(--text-muted)',
-          fontFamily: 'var(--font-display)',
-          fontWeight: 700,
-          letterSpacing: '0.07em',
-          textTransform: 'uppercase',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
+        <div className="match-hero__league">
+          <span>{leagueFlag}</span>
           <span>{match.league.name}</span>
-          <span>{match.round ?? match.season}</span>
+          {match.round && <span style={{ color: 'var(--text-dim)' }}>· {match.round}</span>}
+          <span style={{ color: 'var(--text-dim)', marginLeft: 'auto' }}>{match.season}</span>
         </div>
 
-        {/* Main score area */}
-        <div style={{
-          padding: '32px 24px',
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          alignItems: 'center',
-          gap: 16,
-        }}>
+        {/* Teams + Score */}
+        <div className="match-hero__teams">
+
           {/* Home */}
-          <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
-            <TeamCrest url={match.homeTeam.crestUrl} name={match.homeTeam.name} size={52} />
-            <div style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 20, fontWeight: 700,
-              letterSpacing: '0.03em',
-            }}>
-              {match.homeTeam.name}
-            </div>
-            {/* Home scoring events */}
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'right', lineHeight: 1.8 }}>
-              {homeEvents
-                .filter(e => ['GOAL','OWN_GOAL','PENALTY_SCORED'].includes(e.eventType))
-                .map(e => (
-                  <div key={e.id}>{eventGlyph(e.eventType)} {e.minute}&apos;</div>
-                ))
-              }
+          <div className="match-hero__team">
+            <TeamCrest url={match.homeTeam.crestUrl} name={match.homeTeam.name} size={64} />
+            <div className="match-hero__team-name">{match.homeTeam.name}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.9 }}>
+              {homeEvents.filter(e => isGoalEvent(e.eventType)).map(e => (
+                <div key={e.id}>⚽ {e.minute}'</div>
+              ))}
             </div>
           </div>
 
-          {/* Score + status */}
-          <div style={{ textAlign: 'center' }}>
-            <div style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 52, fontWeight: 700,
-              letterSpacing: '0.04em',
-              color: live ? 'var(--green)' : 'var(--text)',
-              lineHeight: 1,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}>
-              {match.homeScore}
-              <span style={{ color: 'var(--text-dim)', fontWeight: 300 }}>–</span>
-              {match.awayScore}
-            </div>
+          {/* Score block */}
+          <div className="match-hero__score-block">
+            {(live || finished) ? (
+              <div className={`match-hero__score${live ? ' live-score' : ''}`}>
+                <span>{match.homeScore}</span>
+                <span className="match-hero__score-sep">–</span>
+                <span>{match.awayScore}</span>
+              </div>
+            ) : (
+              <div style={{
+                fontFamily: 'var(--font-display)', fontSize: 32,
+                color: 'var(--text-muted)', letterSpacing: '0.04em',
+              }}>
+                {formatKickoff(match.kickoffAt)}
+              </div>
+            )}
 
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 10, textAlign: 'center' }}>
               {live && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
+                <span className="status-badge live" style={{ fontSize: 14 }}>
                   <span className="live-dot" />
-                  <span style={{
-                    fontFamily: 'var(--font-display)',
-                    fontSize: 16, fontWeight: 700,
-                    color: 'var(--green)',
-                    letterSpacing: '0.04em',
-                  }}>
-                    {statusTxt || 'LIVE'}
-                  </span>
-                </div>
+                  {statusTxt || 'LIVE'}
+                </span>
               )}
-              {!live && (
-                <span style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 13, fontWeight: 700,
-                  color: 'var(--text-dim)',
-                  letterSpacing: '0.06em',
-                }}>
-                  {statusTxt || `${formatDate(match.kickoffAt)} ${formatKickoff(match.kickoffAt)}`}
+              {finished && <span className="status-badge finished">Full Time</span>}
+              {!live && !finished && (
+                <span style={{ fontSize: 13, color: 'var(--text-dim)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
+                  {formatDate(match.kickoffAt)}
                 </span>
               )}
             </div>
 
-            {/* Half-time score */}
-            {(match.homeScoreHt !== null || match.awayScoreHt !== null) && (
-              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-dim)' }}>
-                HT: {match.homeScoreHt ?? 0} – {match.awayScoreHt ?? 0}
+            {(match.homeScoreHt != null || match.awayScoreHt != null) && (
+              <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-dim)', textAlign: 'center' }}>
+                HT {match.homeScoreHt ?? 0} – {match.awayScoreHt ?? 0}
               </div>
             )}
           </div>
 
           {/* Away */}
-          <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
-            <TeamCrest url={match.awayTeam.crestUrl} name={match.awayTeam.name} size={52} />
-            <div style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 20, fontWeight: 700,
-              letterSpacing: '0.03em',
-            }}>
-              {match.awayTeam.name}
-            </div>
-            {/* Away scoring events */}
-            <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.8 }}>
-              {awayEvents
-                .filter(e => ['GOAL','OWN_GOAL','PENALTY_SCORED'].includes(e.eventType))
-                .map(e => (
-                  <div key={e.id}>{eventGlyph(e.eventType)} {e.minute}&apos;</div>
-                ))
-              }
+          <div className="match-hero__team">
+            <TeamCrest url={match.awayTeam.crestUrl} name={match.awayTeam.name} size={64} />
+            <div className="match-hero__team-name">{match.awayTeam.name}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.9 }}>
+              {awayEvents.filter(e => isGoalEvent(e.eventType)).map(e => (
+                <div key={e.id}>⚽ {e.minute}'</div>
+              ))}
             </div>
           </div>
+
         </div>
 
-        {/* Venue / meta strip */}
-        {(match.venue) && (
+        {/* Venue */}
+        {match.venue && (
           <div style={{
-            padding: '8px 20px',
+            marginTop: 20, paddingTop: 16,
             borderTop: '1px solid var(--border)',
-            fontSize: 12, color: 'var(--text-dim)',
-            display: 'flex', gap: 16, justifyContent: 'center',
+            textAlign: 'center', fontSize: 13, color: 'var(--text-dim)',
           }}>
-            {match.venue && <span>🏟 {match.venue}</span>}
+            🏟 {match.venue}
           </div>
         )}
       </div>
 
       {/* Events timeline */}
       {match.events.length > 0 && (
-        <section>
-          <h2 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 16, fontWeight: 700,
-            letterSpacing: '0.06em',
-            color: 'var(--text-muted)',
-            marginBottom: 12,
-            textTransform: 'uppercase',
-          }}>
-            Match Events
-          </h2>
-          <div style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            overflow: 'hidden',
-          }}>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card__header">
+            <span className="card__title">Match Events</span>
+            <span style={{ fontSize: 13, color: 'var(--text-dim)' }}>{match.events.length} events</span>
+          </div>
+          <div>
             {[...match.events]
-              .sort((a, b) => a.minute - b.minute)
-              .map((event) => {
-                const isHome = event.teamId === match.homeTeamId;
+              .sort((a, b) => a.minute - b.minute || (a.minuteExtra ?? 0) - (b.minuteExtra ?? 0))
+              .map(event => {
+                const isHome = event.teamId === match!.homeTeamId;
+                const isGoal = isGoalEvent(event.eventType);
                 return (
                   <div key={event.id} style={{
                     display: 'grid',
-                    gridTemplateColumns: '1fr 48px 1fr',
+                    gridTemplateColumns: '1fr 52px 1fr',
                     alignItems: 'center',
-                    padding: '10px 16px',
+                    padding: '9px 16px',
                     borderBottom: '1px solid var(--border-subtle)',
-                    fontSize: 14,
+                    background: isGoal ? 'rgba(0,230,118,0.03)' : 'transparent',
                   }}>
                     {isHome ? (
-                      <div style={{ textAlign: 'right', color: 'var(--text-muted)' }}>
-                        <span style={{ marginRight: 6 }}>{eventGlyph(event.eventType)}</span>
-                        {event.detail ?? event.eventType}
+                      <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 500, color: isGoal ? 'var(--text)' : 'var(--text-muted)' }}>
+                            {event.detail ?? ''}
+                          </div>
+                          {eventLabel(event.eventType) && (
+                            <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{eventLabel(event.eventType)}</div>
+                          )}
+                        </div>
+                        <span style={{ fontSize: 18 }}>{eventGlyph(event.eventType)}</span>
                       </div>
                     ) : <div />}
 
                     <div style={{
                       textAlign: 'center',
                       fontFamily: 'var(--font-display)',
-                      fontSize: 12, fontWeight: 700,
+                      fontSize: 14, fontWeight: 600,
                       color: 'var(--text-dim)',
+                      letterSpacing: '0.04em',
                     }}>
-                      {event.minute}&apos;
-                      {event.minuteExtra > 0 ? `+${event.minuteExtra}` : ''}
+                      {event.minute}'
+                      {(event.minuteExtra ?? 0) > 0 ? `+${event.minuteExtra}` : ''}
                     </div>
 
                     {!isHome ? (
-                      <div style={{ color: 'var(--text-muted)' }}>
-                        <span style={{ marginRight: 6 }}>{eventGlyph(event.eventType)}</span>
-                        {event.detail ?? event.eventType}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 18 }}>{eventGlyph(event.eventType)}</span>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 500, color: isGoal ? 'var(--text)' : 'var(--text-muted)' }}>
+                            {event.detail ?? ''}
+                          </div>
+                          {eventLabel(event.eventType) && (
+                            <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{eventLabel(event.eventType)}</div>
+                          )}
+                        </div>
                       </div>
                     ) : <div />}
                   </div>
                 );
               })}
           </div>
-        </section>
+        </div>
       )}
+
+      {/* No events placeholder */}
+      {match.events.length === 0 && (live || finished) && (
+        <div className="card">
+          <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-dim)', fontSize: 14 }}>
+            No events recorded yet
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
