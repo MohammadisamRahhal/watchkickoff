@@ -51,6 +51,7 @@ export interface ProviderFixture {
   round?:             string;
   venue?:             string;
   rawStatus:          string;
+  minute?:            number | null;
 }
 
 /** Normalized event shape from provider — used before DB insert. */

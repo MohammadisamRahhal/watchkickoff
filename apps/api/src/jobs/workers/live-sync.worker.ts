@@ -34,7 +34,7 @@ async function syncLiveMatches(): Promise<void> {
           status       = ${fx.status as string},
           home_score   = ${fx.homeScore},
           away_score   = ${fx.awayScore},
-          
+          minute       = ${fx.minute ?? null},
           raw_status   = ${fx.rawStatus ?? null},
           updated_at   = NOW()
         WHERE provider_ref->>'apiFootball' = ${fx.externalId}
