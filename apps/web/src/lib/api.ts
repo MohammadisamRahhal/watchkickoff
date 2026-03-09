@@ -97,3 +97,40 @@ export async function getStandings(leagueSlug: string): Promise<StandingRow[]> {
     next: { revalidate: 300 },
   });
 }
+
+// ── Teams ─────────────────────────────────────────────────────
+
+export async function getTeamBySlug(slug: string) {
+  return apiFetch<any>(`/teams/${slug}`, { next: { revalidate: 900 } });
+}
+
+export async function getTeamMatches(slug: string) {
+  return apiFetch<any[]>(`/teams/${slug}/matches`, { next: { revalidate: 300 } });
+}
+
+export async function getTeamStandings(slug: string) {
+  return apiFetch<any[]>(`/teams/${slug}/standings`, { next: { revalidate: 300 } });
+}
+
+export async function getTeamSquad(slug: string) {
+  return apiFetch<any[]>(`/teams/${slug}/squad`, { next: { revalidate: 900 } });
+}
+
+// ── Players ───────────────────────────────────────────────────
+
+export async function getPlayerBySlug(slug: string) {
+  return apiFetch<any>(`/players/${slug}`, { next: { revalidate: 900 } });
+}
+
+export async function getPlayerStats(slug: string) {
+  return apiFetch<any[]>(`/players/${slug}/stats`, { next: { revalidate: 900 } });
+}
+
+// ── Search ────────────────────────────────────────────────────
+
+export async function searchAll(q: string) {
+  return apiFetch<{ teams: any[]; leagues: any[]; players: any[] }>(
+    `/search?q=${encodeURIComponent(q)}`,
+    { next: { revalidate: 60 } },
+  );
+}
