@@ -32,6 +32,7 @@ function SiteHeader() {
             { href: '/',        label: 'Today',   dot: false },
             { href: '/live',    label: 'Live',    dot: true  },
             { href: '/leagues', label: 'Leagues', dot: false },
+            { href: '/search',  label: 'Search',  dot: false },
           ].map(({ href, label, dot }) => (
             <a key={href} href={href} className="nav-link">
               {dot && <span className="nav-link__dot live-dot" style={{ position: 'relative', animation: 'none' }} />}
@@ -55,7 +56,7 @@ function SiteFooter() {
     <footer className="site-footer">
       <div className="container site-footer__inner">
         <span className="site-footer__brand">⚽ WATCHKICKOFF</span>
-        <span>Data by API-Football · Updated every 5 min</span>
+        <span>Data by API-Football · Live updates every 60s</span>
       </div>
     </footer>
   );
