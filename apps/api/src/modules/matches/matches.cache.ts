@@ -56,4 +56,8 @@ export const matchesCache = {
       await redis.del('matches:live:all');
     } catch (err) { logger.warn({ err }, 'Cache invalidation failed'); }
   },
+  async invalidateLiveMatches(): Promise<void> {
+    try { await redis.del(RedisKeys.matchLive("all")); } catch { /* ignore */ }
+  },
 };
+// appended

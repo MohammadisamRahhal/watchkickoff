@@ -20,7 +20,7 @@ const EnvSchema = z.object({
 
   FOOTBALL_API_KEY:              z.string().min(1),
   FOOTBALL_API_BASE_URL:         z.string().url(),
-  FOOTBALL_API_DAILY_LIMIT:      z.coerce.number().int().min(1).default(7000),
+  FOOTBALL_API_DAILY_LIMIT:      z.coerce.number().int().min(1).default(74000),
   FOOTBALL_API_PER_MINUTE_LIMIT: z.coerce.number().int().min(1).default(30),
 
   CORS_ORIGIN: z.string().url(),
