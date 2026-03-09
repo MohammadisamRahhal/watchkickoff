@@ -44,7 +44,7 @@ export default async function LeaguePage({ params, searchParams }: Props) {
   // Group matches by date
   const byDate = new Map<string, typeof matches>();
   for (const m of matches) {
-    const date = formatDate(m.kickoffAt);
+    const date = formatDate(m.kickoffAt ?? new Date().toISOString());
     if (!byDate.has(date)) byDate.set(date, []);
     byDate.get(date)!.push(m);
   }

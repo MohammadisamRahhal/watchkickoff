@@ -29,7 +29,7 @@ export interface MatchResponse {
   slug:       string;
   status:     string;
   minute:     number | null;
-  kickoffAt:  string;
+  kickoffAt:  string | null;
   homeTeam:   { id: string; name: string; crestUrl: string | null; slug: string };
   awayTeam:   { id: string; name: string; crestUrl: string | null; slug: string };
   score:      { home: number; away: number; homeHt: number | null; awayHt: number | null };

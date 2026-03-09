@@ -46,14 +46,15 @@ export async function registerMatchesRoutes(fastify: FastifyInstance): Promise<v
     const { slug } = MatchesSlugParamsSchema.parse((req as any).params);
     const match = await matchesService.getMatchBySlug(slug);
     if (!match) return reply.code(404).send({ error: 'Match not found' });
-    return reply.send({ data: match });
+    const events = await matchesService.getMatchEvents(match.id);
+    return reply.send({ ...match, events });
   });
   fastify.get('/:slug/events', async (req, reply) => {
     const { slug } = MatchesSlugParamsSchema.parse((req as any).params);
     const match = await matchesService.getMatchBySlug(slug);
     if (!match) return reply.code(404).send({ error: 'Match not found' });
     const events = await matchesService.getMatchEvents(match.id);
-    return reply.send({ data: events, count: events.length });
+    return reply.send(events);
   });
   logger.debug('Matches routes registered');
 }

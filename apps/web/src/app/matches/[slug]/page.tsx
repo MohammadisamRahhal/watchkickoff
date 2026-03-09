@@ -121,7 +121,7 @@ export default async function MatchPage({ params }: Props) {
                 fontFamily: 'var(--font-display)', fontSize: 32,
                 color: 'var(--text-muted)', letterSpacing: '0.04em',
               }}>
-                {formatKickoff(match.kickoffAt)}
+                {formatKickoff(match.kickoffAt ?? "")}
               </div>
             )}
 
@@ -135,7 +135,7 @@ export default async function MatchPage({ params }: Props) {
               {finished && <span className="status-badge finished">Full Time</span>}
               {!live && !finished && (
                 <span style={{ fontSize: 13, color: 'var(--text-dim)', fontFamily: 'var(--font-display)', letterSpacing: '0.06em' }}>
-                  {formatDate(match.kickoffAt)}
+                  {formatDate(match.kickoffAt ?? new Date().toISOString())}
                 </span>
               )}
             </div>

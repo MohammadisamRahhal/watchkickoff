@@ -14,7 +14,7 @@ function formatMatch(row: MatchWithRelations): MatchResponse {
     slug:      row.slug,
     status:    row.status,
     minute:    row.minute ?? null,
-    kickoffAt: new Date(row.kickoffAt).toISOString(),
+    kickoffAt: row.kickoffAt ? new Date(row.kickoffAt).toISOString() : null,
     homeTeam:  { id: row.homeTeam.id, name: row.homeTeam.name, crestUrl: row.homeTeam.crestUrl ?? null, slug: row.homeTeam.slug },
     awayTeam:  { id: row.awayTeam.id, name: row.awayTeam.name, crestUrl: row.awayTeam.crestUrl ?? null, slug: row.awayTeam.slug },
     score:     { home: row.score?.home ?? 0, away: row.score?.away ?? 0, homeHt: row.score?.homeHt ?? null, awayHt: row.score?.awayHt ?? null },

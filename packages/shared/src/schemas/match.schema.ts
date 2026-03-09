@@ -17,7 +17,7 @@ export const MatchSchema = z.object({
   leagueId:     z.string().uuid(),
   homeTeamId:   z.string().uuid(),
   awayTeamId:   z.string().uuid(),
-  kickoffAt:    z.coerce.date(),
+  kickoffAt:    z.coerce.date().nullable(),
   status:       MatchStatusSchema,
   homeScore:    z.number().int().min(0),
   awayScore:    z.number().int().min(0),

@@ -40,7 +40,7 @@ export function StatusBadge({ match }: { match: MatchSummary }) {
   if (label) return <span className="status-badge upcoming">{label}</span>;
   return (
     <span className="status-badge upcoming">
-      {formatKickoff(match.kickoffAt)}
+      {formatKickoff(match.kickoffAt ?? "")}
     </span>
   );
 }
