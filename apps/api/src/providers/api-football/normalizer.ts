@@ -113,6 +113,8 @@ export function normalizeEvent(
     externalTeamId:   String(raw.team.id),
     externalPlayerId: raw.player.id != null ? String(raw.player.id) : undefined,
     externalAssistId: raw.assist?.id != null ? String(raw.assist.id) : undefined,
+    playerName:       raw.player?.name ?? undefined,
+    assistName:       raw.assist?.name ?? undefined,
     eventType:        normalizeEventType(raw.type, raw.detail),
     minute:           raw.time.elapsed,
     minuteExtra:      raw.time.extra ?? 0,

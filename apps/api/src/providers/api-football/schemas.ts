@@ -17,7 +17,7 @@ import { z } from 'zod';
 const ApiResponseWrapper = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
     get:        z.string(),
-    parameters: z.record(z.unknown()),
+    parameters: z.union([z.record(z.unknown()), z.array(z.unknown())]),
     errors:     z.union([z.array(z.unknown()), z.record(z.unknown())]),
     results:    z.number(),
     paging:     z.object({ current: z.number(), total: z.number() }),

@@ -199,7 +199,7 @@ export default async function TeamPage({ params, searchParams }: any) {
                         <a href={`/players/${p.slug}`} style={{ color: 'var(--text)', textDecoration: 'none', fontWeight: 500 }}>{p.name}</a>
                       </td>
                       <td style={{ padding: '10px 8px', textAlign: 'center', color: 'var(--text-muted)' }}>{p.position ?? '—'}</td>
-                      <td style={{ padding: '10px 8px', textAlign: 'center', color: 'var(--text-muted)' }}>{p.nationality ?? '—'}</td>
+                      <td style={{ padding: '10px 8px', textAlign: 'center', color: 'var(--text-muted)' }}>{p.nationality_code ?? '—'}</td>
                     </tr>
                   ))}
                 </tbody>

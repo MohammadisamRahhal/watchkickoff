@@ -63,10 +63,20 @@ async function syncLiveMatches(): Promise<void> {
               const teamId = (teamRows.rows as any[])[0]?.id;
               if (!teamId) continue;
 
+              // Resolve player ID from externalPlayerId
+              let playerId: string | null = null;
+              if (ev.externalPlayerId) {
+                const playerRows = await db.execute(sql`
+                  SELECT id FROM players WHERE provider_ref->>'apiFootball' = ${ev.externalPlayerId} LIMIT 1
+                `);
+                playerId = (playerRows.rows as any[])[0]?.id ?? null;
+              }
+              const metaJson = JSON.stringify({ playerName: ev.playerName ?? null });
               await db.execute(sql`
-                INSERT INTO match_events (id, match_id, team_id, event_type, minute, minute_extra, detail, meta)
-                VALUES (gen_random_uuid(), ${matchId}, ${teamId}, ${ev.eventType as string},
-                        ${ev.minute}, ${ev.minuteExtra ?? 0}, ${ev.detail ?? null}, '{}')
+                INSERT INTO match_events (id, match_id, team_id, player_id, event_type, minute, minute_extra, detail, meta)
+                VALUES (gen_random_uuid(), ${matchId}, ${teamId}, ${playerId},
+                        ${ev.eventType as string}, ${ev.minute}, ${ev.minuteExtra ?? 0},
+                        ${ev.detail ?? null}, ${metaJson}::jsonb)
                 ON CONFLICT DO NOTHING
               `);
             }
@@ -81,6 +91,41 @@ async function syncLiveMatches(): Promise<void> {
     }
   }
 
+  // Fix stale LIVE matches that are no longer in live feed
+  await db.execute(sql`UPDATE matches SET status = 'FINISHED', updated_at = NOW() WHERE status IN ('LIVE_1H','LIVE_2H','HALF_TIME','EXTRA_TIME') AND updated_at < NOW() - INTERVAL '10 minutes'`);
+  // Backfill events for recently finished matches with no events yet
+  const recentFinished = await db.execute(sql`
+    SELECT id, provider_ref->>'apiFootball' as ext_id
+    FROM matches
+    WHERE status = 'FINISHED'
+    AND kickoff_at > NOW() - INTERVAL '2 hours'
+    AND NOT EXISTS (SELECT 1 FROM match_events WHERE match_id = matches.id)
+    LIMIT 10
+  `);
+  for (const m of (recentFinished.rows as any[])) {
+    try {
+      const evs = await apiFootballAdapter.getFixtureEvents(m.ext_id);
+      for (const ev of evs) {
+        const tr = await db.execute(sql`SELECT id FROM teams WHERE provider_ref->>'apiFootball' = ${ev.externalTeamId} LIMIT 1`);
+        const teamId = (tr.rows as any[])[0]?.id;
+        if (!teamId) continue;
+        let playerId: string | null = null;
+        if (ev.externalPlayerId) {
+          const pr = await db.execute(sql`SELECT id FROM players WHERE provider_ref->>'apiFootball' = ${ev.externalPlayerId} LIMIT 1`);
+          playerId = (pr.rows as any[])[0]?.id ?? null;
+        }
+        const metaJson = JSON.stringify({ playerName: ev.playerName ?? null });
+        await db.execute(sql`
+          INSERT INTO match_events (id,match_id,team_id,player_id,event_type,minute,minute_extra,detail,meta)
+          VALUES (gen_random_uuid(),${m.id},${teamId},${playerId},${ev.eventType as string},${ev.minute},${ev.minuteExtra ?? 0},${ev.detail ?? null},${metaJson}::jsonb)
+          ON CONFLICT DO NOTHING
+        `);
+      }
+      logger.info({ extId: m.ext_id }, 'Backfilled events for finished match');
+    } catch(e: any) {
+      logger.warn({ extId: m.ext_id, err: e.message }, 'Backfill failed');
+    }
+  }
   // Invalidate live cache so next request gets fresh data
   await matchesCache.invalidateLiveMatches();
   const today = new Date().toISOString().slice(0, 10);

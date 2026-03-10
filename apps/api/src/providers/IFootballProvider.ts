@@ -60,6 +60,8 @@ export interface NormalizedEvent {
   externalTeamId:   string;
   externalPlayerId?: string;
   externalAssistId?: string;
+  playerName?:       string;
+  assistName?:       string;
   eventType:        EventType;
   minute:           number;
   minuteExtra:      number;
