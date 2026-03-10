@@ -179,3 +179,136 @@ interface NormalizedStandingData {
 
 // Export the NormalizedMatchStat type alias so it's accessible in this module.
 export type { NormalizedMatchStat };
+
+// ── Player normalization ───────────────────────────────────────────────────
+
+import type { ApiPlayer, ApiLineup } from './schemas.js';
+
+export interface NormalizedPlayer {
+  externalId:      string;
+  name:            string;
+  slug:            string;
+  nationalityCode: string | null;
+  dateOfBirth:     Date | null;
+  heightCm:        number | null;
+  photoUrl:        string | null;
+  position:        string | null;
+  externalTeamId:  string | null;
+}
+
+export interface NormalizedLineupEntry {
+  externalTeamId: string;
+  externalPlayerId: string;
+  playerName:     string;
+  shirtNumber:    number | null;
+  positionCode:   string | null;
+  formationSlot:  number | null;
+  isStarter:      boolean;
+  isCaptain:      boolean;
+}
+
+export interface NormalizedTopScorer {
+  externalPlayerId: string;
+  playerName:       string;
+  externalTeamId:   string;
+  externalLeagueId: string;
+  season:           string;
+  goals:            number;
+  assists:          number;
+  appearances:      number;
+  minutesPlayed:    number;
+  yellowCards:      number;
+  redCards:         number;
+  shotsTotal:       number;
+  shotsOnTarget:    number;
+  passesTotal:      number;
+  passAccuracy:     number | null;
+  rating:           number | null;
+}
+
+function makePlayerSlug(externalId: string, name: string): string {
+  return `player-${externalId}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 50)}`;
+}
+
+function parseHeightCm(height: string | null | undefined): number | null {
+  if (!height) return null;
+  const m = height.match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+function parseNationalityCode(nat: string | null | undefined): string | null {
+  if (!nat) return null;
+  // API returns full country name — store first 2 chars as placeholder
+  return nat.slice(0, 2).toUpperCase();
+}
+
+export function normalizePlayer(raw: ApiPlayer): NormalizedPlayer {
+  const stat = raw.statistics[0];
+  return {
+    externalId:      String(raw.player.id),
+    name:            raw.player.name,
+    slug:            makePlayerSlug(String(raw.player.id), raw.player.name),
+    nationalityCode: parseNationalityCode(raw.player.nationality),
+    dateOfBirth:     raw.player.birth?.date ? new Date(raw.player.birth.date) : null,
+    heightCm:        parseHeightCm(raw.player.height),
+    photoUrl:        raw.player.photo ?? null,
+    position:        stat?.games?.position ?? null,
+    externalTeamId:  stat ? String(stat.team.id) : null,
+  };
+}
+
+export function normalizeLineup(raw: ApiLineup): NormalizedLineupEntry[] {
+  const entries: NormalizedLineupEntry[] = [];
+  const externalTeamId = String(raw.team.id);
+
+  for (const { player } of raw.startXI) {
+    entries.push({
+      externalTeamId,
+      externalPlayerId: String(player.id),
+      playerName:       player.name,
+      shirtNumber:      player.number ?? null,
+      positionCode:     player.pos ?? null,
+      formationSlot:    player.grid ? parseInt(player.grid.split(':')[0], 10) : null,
+      isStarter:        true,
+      isCaptain:        false,
+    });
+  }
+
+  for (const { player } of raw.substitutes) {
+    entries.push({
+      externalTeamId,
+      externalPlayerId: String(player.id),
+      playerName:       player.name,
+      shirtNumber:      player.number ?? null,
+      positionCode:     player.pos ?? null,
+      formationSlot:    null,
+      isStarter:        false,
+      isCaptain:        false,
+    });
+  }
+
+  return entries;
+}
+
+export function normalizeTopScorer(raw: ApiPlayer): NormalizedTopScorer | null {
+  const stat = raw.statistics[0];
+  if (!stat) return null;
+  return {
+    externalPlayerId: String(raw.player.id),
+    playerName:       raw.player.name,
+    externalTeamId:   String(stat.team.id),
+    externalLeagueId: String(stat.league.id),
+    season:           String(stat.league.season),
+    goals:            stat.goals.total ?? 0,
+    assists:          stat.goals.assists ?? 0,
+    appearances:      stat.games.appearences ?? 0,
+    minutesPlayed:    stat.games.minutes ?? 0,
+    yellowCards:      stat.cards.yellow ?? 0,
+    redCards:         stat.cards.red ?? 0,
+    shotsTotal:       stat.shots?.total ?? 0,
+    shotsOnTarget:    stat.shots?.on ?? 0,
+    passesTotal:      stat.passes?.total ?? 0,
+    passAccuracy:     stat.passes?.accuracy ?? null,
+    rating:           stat.games.rating ? parseFloat(stat.games.rating) : null,
+  };
+}

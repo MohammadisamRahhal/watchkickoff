@@ -34,9 +34,9 @@ export const ApiFixtureStatusSchema = z.object({
 });
 
 export const ApiTeamRefSchema = z.object({
-  id:     z.number(),
-  name:   z.string(),
-  logo:   z.string().optional(),
+  id:     z.number().nullable(),
+  name:   z.string().nullable(),
+  logo:   z.string().nullable().optional(),
 });
 
 export const ApiGoalsSchema = z.object({
@@ -141,3 +141,101 @@ export const ApiStandingsResponseSchema = ApiResponseWrapper(
 export type ApiFixture        = z.infer<typeof ApiFixtureSchema>;
 export type ApiEvent          = z.infer<typeof ApiEventSchema>;
 export type ApiStandingEntry  = z.infer<typeof ApiStandingEntrySchema>;
+
+// ── Players response ───────────────────────────────────────────────────────
+
+export const ApiPlayerStatisticsSchema = z.object({
+  team: z.object({
+    id:   z.number().nullable(),
+    name: z.string().nullable(),
+    logo: z.string().nullable().optional(),
+  }),
+  league: z.object({
+    id:     z.number().nullable(),
+    name:   z.string().nullable(),
+    season: z.number().nullable(),
+  }),
+  games: z.object({
+    appearences:  z.number().nullable().optional(),
+    lineups:      z.number().nullable().optional(),
+    minutes:      z.number().nullable().optional(),
+    position:     z.string().nullable().optional(),
+    rating:       z.string().nullable().optional(),
+  }),
+  goals: z.object({
+    total:   z.number().nullable().optional(),
+    assists: z.number().nullable().optional(),
+  }),
+  cards: z.object({
+    yellow: z.number().nullable().optional(),
+    red:    z.number().nullable().optional(),
+  }),
+  shots: z.object({
+    total: z.number().nullable().optional(),
+    on:    z.number().nullable().optional(),
+  }).optional(),
+  passes: z.object({
+    total:    z.number().nullable().optional(),
+    accuracy: z.number().nullable().optional(),
+  }).optional(),
+});
+
+export const ApiPlayerSchema = z.object({
+  player: z.object({
+    id:          z.number(),
+    name:        z.string(),
+    firstname:   z.string().nullable().optional(),
+    lastname:    z.string().nullable().optional(),
+    age:         z.number().nullable().optional(),
+    birth: z.object({
+      date:    z.string().nullable().optional(),
+      place:   z.string().nullable().optional(),
+      country: z.string().nullable().optional(),
+    }).optional(),
+    nationality: z.string().nullable().optional(),
+    height:      z.string().nullable().optional(),
+    weight:      z.string().nullable().optional(),
+    photo:       z.string().optional(),
+  }),
+  statistics: z.array(ApiPlayerStatisticsSchema),
+});
+
+export const ApiPlayersResponseSchema = ApiResponseWrapper(ApiPlayerSchema);
+
+// ── Lineups response ───────────────────────────────────────────────────────
+
+export const ApiLineupPlayerSchema = z.object({
+  id:     z.number(),
+  name:   z.string(),
+  number: z.number().nullable().optional(),
+  pos:    z.string().nullable().optional(),
+  grid:   z.string().nullable().optional(),
+});
+
+export const ApiLineupSchema = z.object({
+  team: z.object({
+    id:     z.number(),
+    name:   z.string(),
+    logo:   z.string().optional(),
+    colors: z.any().optional(),
+  }),
+  formation: z.string().nullable().optional(),
+  startXI:   z.array(z.object({ player: ApiLineupPlayerSchema })),
+  substitutes: z.array(z.object({ player: ApiLineupPlayerSchema })),
+  coach: z.object({
+    id:   z.number().nullable().optional(),
+    name: z.string().nullable().optional(),
+    photo: z.string().optional(),
+  }).optional(),
+});
+
+export const ApiLineupsResponseSchema = ApiResponseWrapper(ApiLineupSchema);
+
+// ── Top Scorers response — same shape as players ───────────────────────────
+export const ApiTopScorersResponseSchema = ApiPlayersResponseSchema;
+
+// Export inferred types
+export type ApiPlayer           = z.infer<typeof ApiPlayerSchema>;
+export type ApiPlayerStatistics = z.infer<typeof ApiPlayerStatisticsSchema>;
+export type ApiLineup           = z.infer<typeof ApiLineupSchema>;
+export type ApiLineupPlayer     = z.infer<typeof ApiLineupPlayerSchema>;

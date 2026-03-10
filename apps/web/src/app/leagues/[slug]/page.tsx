@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getLeagueBySlug, getLeagueMatches, getStandings } from '@/lib/api';
+import { getLeagueBySlug, getLeagueMatches, getStandings, getLeagueScorers } from '@/lib/api';
 import { MatchRow, MatchGroup, StandingsTable, ErrorBanner, EmptyState, TeamCrest } from '@/components/ui';
 import { countryFlag, formatDate, isLive, isFinished } from '@/lib/utils';
 
@@ -13,8 +13,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const league = await getLeagueBySlug(slug);
     return {
-      title: `${league.name} ${league.season} — Fixtures & Standings`,
-      description: `Live scores, fixtures, results and standings for ${league.name} ${league.season}.`,
+      title: `${league.name} ${league.season} — Fixtures, Standings & Scorers`,
+      description: `Live scores, fixtures, results, standings and top scorers for ${league.name} ${league.season}.`,
     };
   } catch { return { title: 'League' }; }
 }
@@ -25,15 +25,17 @@ export default async function LeaguePage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { tab = 'fixtures' } = await searchParams;
 
-  const [leagueResult, matchesResult, standingsResult] = await Promise.allSettled([
+  const [leagueResult, matchesResult, standingsResult, scorersResult] = await Promise.allSettled([
     getLeagueBySlug(slug),
     getLeagueMatches(slug),
     getStandings(slug),
+    getLeagueScorers(slug),
   ]);
 
-  const league    = leagueResult.status   === 'fulfilled' ? leagueResult.value   : null;
-  const matches   = matchesResult.status  === 'fulfilled' ? matchesResult.value  : [];
+  const league    = leagueResult.status    === 'fulfilled' ? leagueResult.value    : null;
+  const matches   = matchesResult.status   === 'fulfilled' ? matchesResult.value   : [];
   const standings = standingsResult.status === 'fulfilled' ? standingsResult.value : [];
+  const scorers   = scorersResult.status   === 'fulfilled' ? scorersResult.value   : [];
 
   if (!league) return (
     <div className="container" style={{ paddingTop: 28 }}>
@@ -41,20 +43,10 @@ export default async function LeaguePage({ params, searchParams }: Props) {
     </div>
   );
 
-  // Group matches by date
-  const byDate = new Map<string, typeof matches>();
-  for (const m of matches) {
-    const date = formatDate(m.kickoffAt ?? new Date().toISOString());
-    if (!byDate.has(date)) byDate.set(date, []);
-    byDate.get(date)!.push(m);
-  }
-
-  // Live matches first
   const live     = matches.filter(m => isLive(m.status));
   const finished = matches.filter(m => isFinished(m.status));
   const upcoming = matches.filter(m => !isLive(m.status) && !isFinished(m.status));
 
-  // Build team lookup for standings
   const teamCrests: Record<string, string | null> = {};
   const teamNames:  Record<string, string> = {};
   for (const m of matches) {
@@ -63,7 +55,6 @@ export default async function LeaguePage({ params, searchParams }: Props) {
     teamCrests[m.homeTeamId] = m.homeTeam.crestUrl;
     teamCrests[m.awayTeamId] = m.awayTeam.crestUrl;
   }
-  // Also use standings teamName/teamCrest
   for (const s of standings as any[]) {
     if (s.teamName)  teamNames[s.teamId]  = s.teamName;
     if (s.teamCrest) teamCrests[s.teamId] = s.teamCrest;
@@ -72,6 +63,7 @@ export default async function LeaguePage({ params, searchParams }: Props) {
   const tabs = [
     { id: 'fixtures',  label: 'Fixtures',  count: matches.length },
     { id: 'standings', label: 'Standings', count: standings.length },
+    { id: 'scorers',   label: 'Scorers',   count: scorers.length },
   ];
 
   const flag = countryFlag(league.countryCode);
@@ -79,7 +71,6 @@ export default async function LeaguePage({ params, searchParams }: Props) {
   return (
     <div className="container" style={{ paddingTop: 20, paddingBottom: 60 }}>
 
-      {/* Breadcrumb */}
       <nav className="breadcrumb">
         <a href="/">Today</a>
         <span className="breadcrumb__sep">›</span>
@@ -88,15 +79,13 @@ export default async function LeaguePage({ params, searchParams }: Props) {
         <span style={{ color: 'var(--text-muted)' }}>{league.name}</span>
       </nav>
 
-      {/* League header */}
       <div className="match-hero" style={{ marginBottom: 20, padding: '20px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <span style={{ fontSize: 40 }}>{flag}</span>
           <div>
-            <h1 style={{
-              fontFamily: 'var(--font-display)', fontSize: 28,
-              fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1,
-            }}>{league.name.toUpperCase()}</h1>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1 }}>
+              {league.name.toUpperCase()}
+            </h1>
             <div style={{ marginTop: 4, color: 'var(--text-muted)', fontSize: 13, display: 'flex', gap: 12 }}>
               <span>{league.season}</span>
               <span>·</span>
@@ -115,21 +104,14 @@ export default async function LeaguePage({ params, searchParams }: Props) {
       </div>
 
       {/* Tabs */}
-      <div style={{
-        display: 'flex', gap: 0,
-        borderBottom: '1px solid var(--border)',
-        marginBottom: 20,
-      }}>
+      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
         {tabs.map(({ id, label, count }) => (
           <a key={id} href={`/leagues/${slug}?tab=${id}`} style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 13, fontWeight: 700,
-            letterSpacing: '0.06em',
-            padding: '10px 20px',
+            fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700,
+            letterSpacing: '0.06em', padding: '10px 20px',
             color: tab === id ? 'var(--text)' : 'var(--text-dim)',
             borderBottom: tab === id ? '2px solid var(--green)' : '2px solid transparent',
-            marginBottom: -1,
-            display: 'flex', alignItems: 'center', gap: 8,
+            marginBottom: -1, display: 'flex', alignItems: 'center', gap: 8,
           }}>
             {label.toUpperCase()}
             {count > 0 && (
@@ -151,21 +133,9 @@ export default async function LeaguePage({ params, searchParams }: Props) {
             <EmptyState message="No fixtures available for this league." />
           ) : (
             <>
-              {live.length > 0 && (
-                <MatchGroup label="Live Now" flag="🔴" count={live.length}>
-                  {live.map(m => <MatchRow key={m.id} match={m} />)}
-                </MatchGroup>
-              )}
-              {upcoming.length > 0 && (
-                <MatchGroup label="Upcoming" flag="🗓" count={upcoming.length}>
-                  {upcoming.map(m => <MatchRow key={m.id} match={m} />)}
-                </MatchGroup>
-              )}
-              {finished.length > 0 && (
-                <MatchGroup label="Results" flag="✓" count={finished.length}>
-                  {finished.map(m => <MatchRow key={m.id} match={m} />)}
-                </MatchGroup>
-              )}
+              {live.length > 0 && <MatchGroup label="Live Now" flag="🔴" count={live.length}>{live.map(m => <MatchRow key={m.id} match={m} />)}</MatchGroup>}
+              {upcoming.length > 0 && <MatchGroup label="Upcoming" flag="🗓" count={upcoming.length}>{upcoming.map(m => <MatchRow key={m.id} match={m} />)}</MatchGroup>}
+              {finished.length > 0 && <MatchGroup label="Results" flag="✓" count={finished.length}>{finished.map(m => <MatchRow key={m.id} match={m} />)}</MatchGroup>}
             </>
           )}
         </div>
@@ -179,13 +149,8 @@ export default async function LeaguePage({ params, searchParams }: Props) {
           ) : (
             <>
               <div className="card" style={{ overflow: 'hidden', marginBottom: 12 }}>
-                <StandingsTable
-                  rows={standings}
-                  teamNames={teamNames}
-                  teamCrests={teamCrests}
-                />
+                <StandingsTable rows={standings} teamNames={teamNames} teamCrests={teamCrests} />
               </div>
-              {/* Zone legend */}
               <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 12, color: 'var(--text-muted)' }}>
                 {[
                   { cls: 'zone-promotion',    label: 'Promotion / Champions League' },
@@ -199,6 +164,53 @@ export default async function LeaguePage({ params, searchParams }: Props) {
                 ))}
               </div>
             </>
+          )}
+        </div>
+      )}
+
+      {/* SCORERS TAB */}
+      {tab === 'scorers' && (
+        <div className="card" style={{ overflow: 'hidden' }}>
+          {scorers.length === 0 ? (
+            <EmptyState message="Top scorers data not available yet." />
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                  {['#', 'Player', 'Team', 'G', 'A', 'Apps'].map((h, i) => (
+                    <th key={h} style={{
+                      padding: '10px 12px', textAlign: i <= 1 ? 'left' : 'center',
+                      fontSize: 11, fontWeight: 700, letterSpacing: '0.06em',
+                      color: 'var(--text-dim)', fontFamily: 'var(--font-display)',
+                    }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {scorers.map((s: any, i: number) => (
+                  <tr key={s.playerId} style={{ borderBottom: i < scorers.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}
+                    className="match-row">
+                    <td style={{ padding: '10px 12px', width: 36, textAlign: 'center', color: 'var(--text-dim)', fontSize: 13 }}>
+                      {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <a href={`/players/${s.playerSlug}`} style={{ fontWeight: 500, fontSize: 14, color: 'var(--text)' }}>
+                        {s.playerName}
+                      </a>
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <a href={`/teams/${s.teamSlug}`} style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 13 }}>
+                        <TeamCrest url={s.teamCrest} name={s.teamName} size={20} />
+                        {s.teamName}
+                      </a>
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--green)', fontSize: 16 }}>{s.goals}</td>
+                    <td style={{ padding: '10px 12px', textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 14 }}>{s.assists}</td>
+                    <td style={{ padding: '10px 12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>{s.appearances}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       )}

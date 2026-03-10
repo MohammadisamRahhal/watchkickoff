@@ -80,4 +80,9 @@ export const matchesService = {
       detail:      r.detail ?? null,
     }));
   },
+
+  async getMatchLineups(matchId: string) {
+    return matchesQueries.findLineupsByMatchId(matchId);
+  },
+
 };

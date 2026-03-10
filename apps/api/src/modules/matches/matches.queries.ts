@@ -209,4 +209,12 @@ export const matchesQueries = {
     }).returning({ id: matches.id });
     return inserted[0]!.id;
   },
+
+  async findLineupsByMatchId(matchId: string) {
+    const { rows } = await db.execute(
+      sql`SELECT ml.is_starter, ml.is_captain, ml.shirt_number, ml.position_code, ml.formation_slot, p.id AS player_id, p.name AS player_name, p.slug AS player_slug, p.position, t.id AS team_id, t.slug AS team_slug FROM match_lineups ml JOIN players p ON p.id = ml.player_id JOIN teams t ON t.id = ml.team_id WHERE ml.match_id = ${matchId} ORDER BY t.id, ml.is_starter DESC, ml.shirt_number ASC`
+    );
+    return rows as any[];
+  },
+
 };

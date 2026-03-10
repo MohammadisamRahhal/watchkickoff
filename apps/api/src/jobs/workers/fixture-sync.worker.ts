@@ -14,7 +14,7 @@ function makeTeamSlug(externalId: string, name: string) {
   return `team-${externalId}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 40)}`;
 }
 function makeLeagueSlug(externalId: string, name: string, season: string) {
-  return `league-${externalId}-${season}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 40)}`;
+  return `league-${externalId}-${season}`;
 }
 async function syncTodayFixtures(): Promise<void> {
   logger.info('Fetching today fixtures from API-Football');

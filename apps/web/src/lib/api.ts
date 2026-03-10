@@ -134,3 +134,15 @@ export async function searchAll(q: string) {
     { next: { revalidate: 60 } },
   );
 }
+
+export async function getMatchLineups(slug: string) {
+  return apiFetch<any[]>(`/matches/${slug}/lineups`, { next: { revalidate: 300 } });
+}
+
+export async function getLeagueScorers(slug: string) {
+  return apiFetch<any[]>(`/leagues/${slug}/scorers`, { next: { revalidate: 900 } });
+}
+
+export async function getMatchLineups(slug: string) {
+  return apiFetch<any[]>(`/matches/${slug}/lineups`, { next: { revalidate: 300 } });
+}

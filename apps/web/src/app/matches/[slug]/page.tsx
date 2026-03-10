@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
-import { getMatchBySlug } from '@/lib/api';
+import { getMatchBySlug, getMatchLineups } from '@/lib/api';
 import { TeamCrest, ErrorBanner } from '@/components/ui';
 import { statusLabel, isLive, isFinished, formatDate, formatKickoff, countryFlag } from '@/lib/utils';
 import type { MatchEvent } from '@watchkickoff/shared';
 import { EVENT_TYPE } from '@watchkickoff/shared';
 
-interface Props { params: Promise<{ slug: string }> }
+interface Props {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
@@ -48,11 +51,16 @@ function isGoalEvent(type: string) {
   return [EVENT_TYPE.GOAL, EVENT_TYPE.OWN_GOAL, EVENT_TYPE.PENALTY_SCORED].includes(type as any);
 }
 
-export default async function MatchPage({ params }: Props) {
+export default async function MatchPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { tab = 'events' } = await searchParams;
   let match = null;
+  let lineups: any[] = [];
   let error: string | null = null;
-  try { match = await getMatchBySlug(slug); }
+  try {
+    match = await getMatchBySlug(slug);
+    try { lineups = await getMatchLineups(slug); } catch { lineups = []; }
+  }
   catch { error = 'Match not found.'; }
 
   if (error || !match) return (
@@ -171,6 +179,24 @@ export default async function MatchPage({ params }: Props) {
           </div>
         )}
       </div>
+
+      {/* Tab nav */}
+      {(live || finished) && (
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
+          {[
+            { id: 'events', label: 'EVENTS' },
+            { id: 'lineup', label: 'LINEUP' },
+          ].map(({ id, label }) => (
+            <a key={id} href={`/matches/${slug}?tab=${id}`} style={{
+              fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700,
+              letterSpacing: '0.06em', padding: '10px 20px',
+              color: tab === id ? 'var(--text)' : 'var(--text-dim)',
+              borderBottom: tab === id ? '2px solid var(--green)' : '2px solid transparent',
+              marginBottom: -1,
+            }}>{label}</a>
+          ))}
+        </div>
+      )}
 
       {/* Events timeline */}
       {match.events.length > 0 && (

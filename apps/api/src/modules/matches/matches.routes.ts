@@ -5,6 +5,7 @@ import type { FastifyInstance } from 'fastify';
 import { matchesService } from './matches.service.js';
 import { MatchesIdParamsSchema, MatchesSlugParamsSchema } from './matches.schema.js';
 import { createLogger } from '@core/logger.js';
+import { matchesQueries } from './matches.queries.js';
 
 const logger = createLogger('matches-routes');
 
@@ -56,5 +57,13 @@ export async function registerMatchesRoutes(fastify: FastifyInstance): Promise<v
     const events = await matchesService.getMatchEvents(match.id);
     return reply.send(events);
   });
+  fastify.get('/:slug/lineups', async (req, reply) => {
+    const { slug } = (req as any).params;
+    const match = await matchesQueries.findBySlug(slug);
+    if (!match) return reply.code(404).send({ error: 'Match not found' });
+    const data = await matchesQueries.findLineupsByMatchId(match.id as string);
+    return reply.send(data);
+  });
+
   logger.debug('Matches routes registered');
 }
