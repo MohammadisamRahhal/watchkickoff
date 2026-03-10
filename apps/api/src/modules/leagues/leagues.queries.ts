@@ -54,7 +54,7 @@ export const leaguesQueries = {
 
   async findStandingsByLeagueSlug(slug: string) {
     const { rows } = await db.execute(sql`
-      SELECT
+      SELECT DISTINCT ON (s.team_id)
         s.id, s.position, s.played, s.wins, s.draws, s.losses,
         s.goals_for, s.goals_against, s.points, s.form, s.zone,
         s.team_id, s.league_id, s.season,
@@ -63,7 +63,7 @@ export const leaguesQueries = {
       JOIN leagues l ON l.id = s.league_id
       JOIN teams   t ON t.id = s.team_id
       WHERE l.slug = ${slug}
-      ORDER BY s.position ASC
+      ORDER BY s.team_id, s.position ASC
     `);
     return (rows as any[]).map(r => ({
       id: r.id, position: r.position, played: r.played,

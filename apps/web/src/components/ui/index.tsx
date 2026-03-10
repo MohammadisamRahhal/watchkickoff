@@ -54,7 +54,7 @@ export function MatchRow({ match }: { match: MatchSummary }) {
   return (
     <a href={`/matches/${match.slug}`} className={`match-row${live ? ' live' : ''}`}>
       <div className="match-row__home">
-        <a href={`/teams/${match.homeTeam.slug}`} className={`match-row__team-name${live ? ' active' : ''}`} onClick={e => e.stopPropagation()} style={{textDecoration:'none',color:'inherit'}}>
+        <a href={`/teams/${match.homeTeam.slug}`} className={`match-row__team-name${live ? ' active' : ''}`} style={{textDecoration:'none',color:'inherit'}}>
           {match.homeTeam.shortName ?? match.homeTeam.name}
         </a>
         <TeamCrest url={match.homeTeam.crestUrl} name={match.homeTeam.name} size={24} />
@@ -73,7 +73,7 @@ export function MatchRow({ match }: { match: MatchSummary }) {
 
       <div className="match-row__away">
         <TeamCrest url={match.awayTeam.crestUrl} name={match.awayTeam.name} size={24} />
-        <a href={`/teams/${match.awayTeam.slug}`} className={`match-row__team-name${live ? ' active' : ''}`} onClick={e => e.stopPropagation()} style={{textDecoration:'none',color:'inherit'}}>
+        <a href={`/teams/${match.awayTeam.slug}`} className={`match-row__team-name${live ? ' active' : ''}`} style={{textDecoration:'none',color:'inherit'}}>
           {match.awayTeam.shortName ?? match.awayTeam.name}
         </a>
       </div>
