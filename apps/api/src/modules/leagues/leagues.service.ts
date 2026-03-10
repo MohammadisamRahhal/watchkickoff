@@ -17,7 +17,7 @@ export const leaguesService = {
     const result = rows.map(r => ({
       id: r.id, name: r.name, slug: r.slug,
       countryCode: r.countryCode, season: r.season,
-      type: r.type, isActive: r.isActive,
+      type: r.type, isActive: r.isActive, logo: (r.providerRef as any)?.logo ?? null,
     }));
     await leaguesCache.setAll(result);
     return result;
@@ -31,7 +31,7 @@ export const leaguesService = {
     const result = {
       id: row.id, name: row.name, slug: row.slug,
       countryCode: row.countryCode, season: row.season,
-      type: row.type, isActive: row.isActive,
+      type: row.type, isActive: row.isActive, logo: (row.providerRef as any)?.logo ?? null,
     };
     await leaguesCache.setLeague(slug, result);
     return result;

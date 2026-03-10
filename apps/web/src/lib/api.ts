@@ -140,9 +140,6 @@ export async function getMatchLineups(slug: string) {
 }
 
 export async function getLeagueScorers(slug: string) {
-  return apiFetch<any[]>(`/leagues/${slug}/scorers`, { next: { revalidate: 900 } });
+  return apiFetch<any[]>(`/leagues/${slug}/scorers`, { next: { revalidate: 3600 } });
 }
 
-export async function getMatchLineups(slug: string) {
-  return apiFetch<any[]>(`/matches/${slug}/lineups`, { next: { revalidate: 300 } });
-}

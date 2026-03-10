@@ -51,6 +51,8 @@ function isGoalEvent(type: string) {
   return [EVENT_TYPE.GOAL, EVENT_TYPE.OWN_GOAL, EVENT_TYPE.PENALTY_SCORED].includes(type as any);
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function MatchPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { tab = 'events' } = await searchParams;
@@ -199,7 +201,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
       )}
 
       {/* Events timeline */}
-      {match.events.length > 0 && (
+      {tab === 'events' && match.events.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card__header">
             <span className="card__title">Match Events</span>
@@ -266,7 +268,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
       )}
 
       {/* No events placeholder */}
-      {match.events.length === 0 && (live || finished) && (
+      {tab === 'events' && match.events.length === 0 && (live || finished) && (
         <div className="card">
           <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-dim)', fontSize: 14 }}>
             No events recorded yet
@@ -274,6 +276,52 @@ export default async function MatchPage({ params, searchParams }: Props) {
         </div>
       )}
 
+
+      {/* Lineup tab */}
+      {tab === 'lineup' && (
+        <div className="card">
+          {lineups.length === 0 ? (
+            <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-dim)', fontSize: 14 }}>
+              Lineup not available yet.
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+              {/* Home team */}
+              <div style={{ borderRight: '1px solid var(--border-subtle)', padding: '16px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12, letterSpacing: 1 }}>
+                  {match.homeTeam?.name?.toUpperCase()}
+                </div>
+                {lineups.filter((p: any) => p.team_id === match.homeTeam?.id).map((p: any) => (
+                  <div key={p.player_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                    <span style={{ fontSize: 11, color: 'var(--text-dim)', minWidth: 20, textAlign: 'center' }}>{p.shirt_number ?? '—'}</span>
+                    <span style={{ fontSize: 13, color: p.is_starter ? 'var(--text)' : 'var(--text-muted)', fontWeight: p.is_starter ? 500 : 400 }}>
+                      {p.player_name}
+                    </span>
+                    {p.is_captain && <span style={{ fontSize: 10, color: 'var(--accent)' }}>©</span>}
+                    {!p.is_starter && <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>SUB</span>}
+                  </div>
+                ))}
+              </div>
+              {/* Away team */}
+              <div style={{ padding: '16px' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12, letterSpacing: 1 }}>
+                  {match.awayTeam?.name?.toUpperCase()}
+                </div>
+                {lineups.filter((p: any) => p.team_id === match.awayTeam?.id).map((p: any) => (
+                  <div key={p.player_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
+                    <span style={{ fontSize: 11, color: 'var(--text-dim)', minWidth: 20, textAlign: 'center' }}>{p.shirt_number ?? '—'}</span>
+                    <span style={{ fontSize: 13, color: p.is_starter ? 'var(--text)' : 'var(--text-muted)', fontWeight: p.is_starter ? 500 : 400 }}>
+                      {p.player_name}
+                    </span>
+                    {p.is_captain && <span style={{ fontSize: 10, color: 'var(--accent)' }}>©</span>}
+                    {!p.is_starter && <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>SUB</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

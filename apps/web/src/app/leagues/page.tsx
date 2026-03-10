@@ -65,6 +65,11 @@ export default async function LeaguesPage() {
                   transition: 'background 0.12s',
                   cursor: 'pointer',
                 }} className="match-row">
+                  {(league as any).logo ? (
+                    <img src={(league as any).logo} alt={league.name} style={{ width: 24, height: 24, objectFit: 'contain' }} />
+                  ) : (
+                    <div style={{ width: 24, height: 24, background: 'var(--border-subtle)', borderRadius: 4 }} />
+                  )}
                   <div style={{ flex: 1 }}>
                     <div style={{
                       fontFamily: 'var(--font-body)',
