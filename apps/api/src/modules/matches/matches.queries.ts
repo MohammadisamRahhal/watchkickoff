@@ -194,10 +194,14 @@ export const matchesQueries = {
     homeScoreHt?: number; awayScoreHt?: number; minute?: number; minuteExtra?: number;
     season: string; round?: string; venue?: string; rawStatus?: string; slug: string;
   }): Promise<string> {
-    const existing = await db.select({ id: matches.id }).from(matches)
-      .where(eq(matches.slug, data.slug)).limit(1);
+    // Look up by home+away+kickoff (unique constraint) to prevent duplicates
+    const existing = await db.select({ id: matches.id, slug: matches.slug }).from(matches)
+      .where(
+        sql`home_team_id = ${data.homeTeamId} AND away_team_id = ${data.awayTeamId} AND kickoff_at = ${data.kickoffAt}`
+      ).limit(1);
     if (existing[0]) {
       await db.update(matches).set({
+        slug: data.slug,
         status: data.status as any, homeScore: data.homeScore, awayScore: data.awayScore,
         homeScoreHt: data.homeScoreHt, awayScoreHt: data.awayScoreHt,
         minute: data.minute, minuteExtra: data.minuteExtra,
