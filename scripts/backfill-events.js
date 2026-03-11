@@ -40,7 +40,8 @@ async function main() {
            m.home_team_id, m.away_team_id
     FROM matches m
     WHERE m.status = 'FINISHED'
-    AND m.kickoff_at > NOW() - INTERVAL '30 days'
+    AND m.kickoff_at > NOW() - INTERVAL '1 year'
+    AND EXISTS (SELECT 1 FROM leagues l WHERE l.id = m.league_id AND l.provider_ref->>'apiFootball' IN ('39','40','41','42','78','135','140','61','2','3','253','94','88','71','136'))
     AND NOT EXISTS (SELECT 1 FROM match_events WHERE match_id = m.id)
     ORDER BY m.kickoff_at DESC
   `);

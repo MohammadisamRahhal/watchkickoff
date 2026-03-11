@@ -14,9 +14,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { slug } = await params;
     const match = await getMatchBySlug(slug);
-    const title = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
-    return { title, description: `${title} · ${match.league.name} · ${match.season}` };
-  } catch { return { title: 'Match' }; }
+    const title = `${match.homeTeam.name} vs ${match.awayTeam.name} — ${match.league.name} | WatchKickoff`;
+    const description = `${match.homeTeam.name} vs ${match.awayTeam.name} live score, events and lineups · ${match.league.name} ${match.season}.`;
+    return { title, description };
+  } catch { return { title: 'Match | WatchKickoff' }; }
 }
 
 export const revalidate = 30;
@@ -113,7 +114,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
             <div className="match-hero__team-name">{match.homeTeam.name}</div>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.9 }}>
               {homeEvents.filter(e => isGoalEvent(e.eventType)).map(e => (
-                <div key={e.id}>⚽ {e.minute}'</div>
+                <div key={e.id}>⚽ {(e as any).meta?.playerName ?? ''} {e.minute}'</div>
               ))}
             </div>
           </div>
@@ -163,7 +164,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
             <div className="match-hero__team-name">{match.awayTeam.name}</div>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.9 }}>
               {awayEvents.filter(e => isGoalEvent(e.eventType)).map(e => (
-                <div key={e.id}>⚽ {e.minute}'</div>
+                <div key={e.id}>⚽ {(e as any).meta?.playerName ?? ''} {e.minute}'</div>
               ))}
             </div>
           </div>
@@ -226,8 +227,11 @@ export default async function MatchPage({ params, searchParams }: Props) {
                       <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 500, color: isGoal ? 'var(--text)' : 'var(--text-muted)' }}>
-                            {event.detail ?? ''}
+                            {(event as any).meta?.playerName ?? event.detail ?? ''}
                           </div>
+                          {(event as any).meta?.assistName && (
+                            <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>↳ {(event as any).meta.assistName}</div>
+                          )}
                           {eventLabel(event.eventType) && (
                             <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{eventLabel(event.eventType)}</div>
                           )}
@@ -252,8 +256,11 @@ export default async function MatchPage({ params, searchParams }: Props) {
                         <span style={{ fontSize: 18 }}>{eventGlyph(event.eventType)}</span>
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 500, color: isGoal ? 'var(--text)' : 'var(--text-muted)' }}>
-                            {event.detail ?? ''}
+                            {(event as any).meta?.playerName ?? event.detail ?? ''}
                           </div>
+                          {(event as any).meta?.assistName && (
+                            <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>↳ {(event as any).meta.assistName}</div>
+                          )}
                           {eventLabel(event.eventType) && (
                             <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{eventLabel(event.eventType)}</div>
                           )}

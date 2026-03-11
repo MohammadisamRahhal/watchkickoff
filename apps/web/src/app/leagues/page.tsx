@@ -5,7 +5,7 @@ import { EmptyState, ErrorBanner } from '@/components/ui';
 import type { League } from '@watchkickoff/shared';
 
 export const metadata: Metadata = {
-  title: 'Leagues & Competitions',
+  title: 'Leagues & Competitions | WatchKickoff',
   description: 'Browse football leagues, standings and fixtures from 500+ competitions worldwide.',
 };
 

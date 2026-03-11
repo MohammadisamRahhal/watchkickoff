@@ -220,8 +220,8 @@ export const ApiLineupSchema = z.object({
     colors: z.any().optional(),
   }),
   formation: z.string().nullable().optional(),
-  startXI:   z.array(z.object({ player: ApiLineupPlayerSchema })),
-  substitutes: z.array(z.object({ player: ApiLineupPlayerSchema })),
+  startXI:   z.array(z.object({ player: ApiLineupPlayerSchema })).optional().default([]),
+  substitutes: z.array(z.object({ player: ApiLineupPlayerSchema })).optional().default([]),
   coach: z.object({
     id:   z.number().nullable().optional(),
     name: z.string().nullable().optional(),

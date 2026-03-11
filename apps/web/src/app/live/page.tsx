@@ -5,7 +5,7 @@ import { countryFlag } from '@/lib/utils';
 import type { MatchSummary } from '@watchkickoff/shared';
 
 export const metadata: Metadata = {
-  title: 'Live Scores',
+  title: 'Live Football Scores — WatchKickoff',
   description: 'Live football scores updating in real time.',
 };
 

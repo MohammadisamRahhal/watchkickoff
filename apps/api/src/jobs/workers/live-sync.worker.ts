@@ -126,6 +126,38 @@ async function syncLiveMatches(): Promise<void> {
       logger.warn({ extId: m.ext_id, err: e.message }, 'Backfill failed');
     }
   }
+  // Backfill lineups for recently finished matches with no lineups yet
+  const recentFinishedLineups = await db.execute(sql`
+    SELECT m.id, m.provider_ref->>'apiFootball' as ext_id
+    FROM matches m
+    JOIN leagues l ON l.id = m.league_id
+    WHERE m.status = 'FINISHED'
+    AND m.kickoff_at > NOW() - INTERVAL '2 hours'
+    AND NOT EXISTS (SELECT 1 FROM match_lineups WHERE match_id = m.id)
+    LIMIT 5
+  `);
+  for (const m of (recentFinishedLineups.rows as any[])) {
+    try {
+      const lineupEntries = await apiFootballAdapter.getFixtureLineups(m.ext_id);
+      for (const p of lineupEntries) {
+        const tr = await db.execute(sql`SELECT id FROM teams WHERE provider_ref->>'apiFootball' = ${p.externalTeamId} LIMIT 1`);
+        const teamId = (tr.rows as any[])[0]?.id;
+        if (!teamId) continue;
+        const pr = await db.execute(sql`SELECT id FROM players WHERE provider_ref->>'apiFootball' = ${p.externalPlayerId} LIMIT 1`);
+        const playerId = (pr.rows as any[])[0]?.id;
+        if (!playerId) continue;
+        await db.execute(sql`
+          INSERT INTO match_lineups (id,match_id,team_id,player_id,shirt_number,position_code,is_starter,formation_slot,is_captain,created_at)
+          VALUES (gen_random_uuid(),${m.id},${teamId},${playerId},${p.shirtNumber ?? null},${p.positionCode ?? null},${p.isStarter},${p.formationSlot ?? null},${p.isCaptain ?? false},NOW())
+          ON CONFLICT DO NOTHING
+        `);
+      }
+      logger.info({ extId: m.ext_id }, 'Backfilled lineups for finished match');
+    } catch(e: any) {
+      logger.warn({ extId: m.ext_id, err: e.message }, 'Lineup backfill failed');
+    }
+  }
+
   // Invalidate live cache so next request gets fresh data
   await matchesCache.invalidateLiveMatches();
   const today = new Date().toISOString().slice(0, 10);

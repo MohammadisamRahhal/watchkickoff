@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTeamBySlug, getTeamMatches, getTeamStandings, getTeamSquad } from '@/lib/api';
 
@@ -34,6 +35,17 @@ function MatchRow({ match }: { match: any }) {
       </div>
     </a>
   );
+}
+
+export async function generateMetadata({ params }: any): Promise<Metadata> {
+  try {
+    const { slug } = await params;
+    const team = await getTeamBySlug(slug);
+    return {
+      title: `${team.name} — Fixtures, Results & Squad | WatchKickoff`,
+      description: `Latest fixtures, results, standings and squad for ${team.name}.`,
+    };
+  } catch { return { title: 'Team | WatchKickoff' }; }
 }
 
 export default async function TeamPage({ params, searchParams }: any) {

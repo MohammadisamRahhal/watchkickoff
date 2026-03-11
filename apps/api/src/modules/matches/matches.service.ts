@@ -78,6 +78,7 @@ export const matchesService = {
       teamId:      r.teamId,
       playerId:    r.playerId ?? null,
       detail:      r.detail ?? null,
+      meta:        (r as any).meta ?? null,
     }));
   },
 
