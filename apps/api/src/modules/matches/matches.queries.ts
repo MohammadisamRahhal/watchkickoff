@@ -112,9 +112,17 @@ export const matchesQueries = {
   },
 
   async findEventsByMatchId(matchId: string) {
-    return db.select().from(matchEvents)
-      .where(eq(matchEvents.matchId, matchId))
-      .orderBy(matchEvents.minute, matchEvents.minuteExtra);
+    const { rows } = await db.execute(
+      sql`SELECT me.id, me.event_type AS "eventType", me.minute, me.minute_extra AS "minuteExtra",
+        me.team_id AS "teamId", me.player_id AS "playerId", me.detail, me.meta,
+        p.slug AS player_slug, t.slug AS team_slug
+        FROM match_events me
+        LEFT JOIN players p ON p.id = me.player_id
+        LEFT JOIN teams t ON t.id = me.team_id
+        WHERE me.match_id = ${matchId}
+        ORDER BY me.minute, me.minute_extra`
+    );
+    return rows as any[];
   },
 
   async upsertLeague(data: {

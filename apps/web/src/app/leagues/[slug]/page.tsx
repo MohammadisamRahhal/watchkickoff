@@ -49,14 +49,18 @@ export default async function LeaguePage({ params, searchParams }: Props) {
 
   const teamCrests: Record<string, string | null> = {};
   const teamNames:  Record<string, string> = {};
+  const teamSlugs:  Record<string, string> = {};
   for (const m of matches) {
     teamNames[m.homeTeamId]  = m.homeTeam.name;
     teamNames[m.awayTeamId]  = m.awayTeam.name;
+    if (m.homeTeam.slug) teamSlugs[m.homeTeamId] = m.homeTeam.slug;
+    if (m.awayTeam.slug) teamSlugs[m.awayTeamId] = m.awayTeam.slug;
     teamCrests[m.homeTeamId] = m.homeTeam.crestUrl;
     teamCrests[m.awayTeamId] = m.awayTeam.crestUrl;
   }
   for (const s of standings as any[]) {
     if (s.teamName)  teamNames[s.teamId]  = s.teamName;
+  if (s.teamSlug)  teamSlugs[s.teamId]  = s.teamSlug;
     if (s.teamCrest) teamCrests[s.teamId] = s.teamCrest;
   }
 
@@ -149,7 +153,7 @@ export default async function LeaguePage({ params, searchParams }: Props) {
           ) : (
             <>
               <div className="card" style={{ overflow: 'hidden', marginBottom: 12 }}>
-                <StandingsTable rows={standings} teamNames={teamNames} teamCrests={teamCrests} />
+                <StandingsTable rows={standings} teamNames={teamNames} teamCrests={teamCrests} teamSlugs={teamSlugs} />
               </div>
               <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 12, color: 'var(--text-muted)' }}>
                 {[

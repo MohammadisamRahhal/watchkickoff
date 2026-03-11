@@ -98,10 +98,11 @@ export function MatchGroup({ label, flag, count, children }: {
 }
 
 // ── StandingsTable ─────────────────────────────────────────────────
-export function StandingsTable({ rows, teamNames, teamCrests }: {
+export function StandingsTable({ rows, teamNames, teamCrests, teamSlugs }: {
   rows: StandingRow[];
   teamNames: Record<string, string>;
   teamCrests: Record<string, string | null>;
+  teamSlugs?: Record<string, string>;
 }) {
   return (
     <div className="standings-wrap">
@@ -121,7 +122,9 @@ export function StandingsTable({ rows, teamNames, teamCrests }: {
               <td>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <TeamCrest url={teamCrests[row.teamId] ?? null} name={teamNames[row.teamId] ?? ''} size={20} />
-                  <span style={{ color: 'var(--text)', fontWeight: 500 }}>{teamNames[row.teamId] ?? row.teamId}</span>
+                  {teamSlugs?.[row.teamId]
+                    ? <a href={"/teams/" + teamSlugs[row.teamId]} style={{ color: 'var(--text)', fontWeight: 500, textDecoration: 'none' }}>{teamNames[row.teamId] ?? row.teamId}</a>
+                    : <span style={{ color: 'var(--text)', fontWeight: 500 }}>{teamNames[row.teamId] ?? row.teamId}</span>}
                 </div>
               </td>
               <td>{row.played}</td>

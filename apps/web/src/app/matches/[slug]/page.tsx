@@ -111,7 +111,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
           {/* Home */}
           <div className="match-hero__team">
             <TeamCrest url={match.homeTeam.crestUrl} name={match.homeTeam.name} size={64} />
-            <div className="match-hero__team-name">{match.homeTeam.name}</div>
+            <a href={"/teams/" + match.homeTeam.slug} className="match-hero__team-name" style={{textDecoration:'none',color:'inherit'}}>{match.homeTeam.name}</a>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.9 }}>
               {homeEvents.filter(e => isGoalEvent(e.eventType)).map(e => (
                 <div key={e.id}>⚽ {(e as any).meta?.playerName ?? ''} {e.minute}'</div>
@@ -161,7 +161,7 @@ export default async function MatchPage({ params, searchParams }: Props) {
           {/* Away */}
           <div className="match-hero__team">
             <TeamCrest url={match.awayTeam.crestUrl} name={match.awayTeam.name} size={64} />
-            <div className="match-hero__team-name">{match.awayTeam.name}</div>
+            <a href={"/teams/" + match.awayTeam.slug} className="match-hero__team-name" style={{textDecoration:'none',color:'inherit'}}>{match.awayTeam.name}</a>
             <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.9 }}>
               {awayEvents.filter(e => isGoalEvent(e.eventType)).map(e => (
                 <div key={e.id}>⚽ {(e as any).meta?.playerName ?? ''} {e.minute}'</div>
@@ -227,7 +227,9 @@ export default async function MatchPage({ params, searchParams }: Props) {
                       <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 500, color: isGoal ? 'var(--text)' : 'var(--text-muted)' }}>
-                            {(event as any).meta?.playerName ?? event.detail ?? ''}
+                            {(event as any).playerSlug
+                              ? <a href={"/players/" + (event as any).playerSlug} style={{color:'inherit',textDecoration:'none'}}>{(event as any).meta?.playerName ?? event.detail ?? ''}</a>
+                              : ((event as any).meta?.playerName ?? event.detail ?? '')}
                           </div>
                           {(event as any).meta?.assistName && (
                             <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>↳ {(event as any).meta.assistName}</div>
@@ -256,7 +258,9 @@ export default async function MatchPage({ params, searchParams }: Props) {
                         <span style={{ fontSize: 18 }}>{eventGlyph(event.eventType)}</span>
                         <div>
                           <div style={{ fontSize: 14, fontWeight: 500, color: isGoal ? 'var(--text)' : 'var(--text-muted)' }}>
-                            {(event as any).meta?.playerName ?? event.detail ?? ''}
+                            {(event as any).playerSlug
+                              ? <a href={"/players/" + (event as any).playerSlug} style={{color:'inherit',textDecoration:'none'}}>{(event as any).meta?.playerName ?? event.detail ?? ''}</a>
+                              : ((event as any).meta?.playerName ?? event.detail ?? '')}
                           </div>
                           {(event as any).meta?.assistName && (
                             <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>↳ {(event as any).meta.assistName}</div>
@@ -301,9 +305,9 @@ export default async function MatchPage({ params, searchParams }: Props) {
                 {lineups.filter((p: any) => p.team_id === match.homeTeam?.id).map((p: any) => (
                   <div key={p.player_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
                     <span style={{ fontSize: 11, color: 'var(--text-dim)', minWidth: 20, textAlign: 'center' }}>{p.shirt_number ?? '—'}</span>
-                    <span style={{ fontSize: 13, color: p.is_starter ? 'var(--text)' : 'var(--text-muted)', fontWeight: p.is_starter ? 500 : 400 }}>
+                    <a href={"/players/" + p.player_slug} style={{ fontSize: 13, color: p.is_starter ? 'var(--text)' : 'var(--text-muted)', fontWeight: p.is_starter ? 500 : 400, textDecoration:'none' }}>
                       {p.player_name}
-                    </span>
+                    </a>
                     {p.is_captain && <span style={{ fontSize: 10, color: 'var(--accent)' }}>©</span>}
                     {!p.is_starter && <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>SUB</span>}
                   </div>
@@ -317,9 +321,9 @@ export default async function MatchPage({ params, searchParams }: Props) {
                 {lineups.filter((p: any) => p.team_id === match.awayTeam?.id).map((p: any) => (
                   <div key={p.player_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--border-subtle)' }}>
                     <span style={{ fontSize: 11, color: 'var(--text-dim)', minWidth: 20, textAlign: 'center' }}>{p.shirt_number ?? '—'}</span>
-                    <span style={{ fontSize: 13, color: p.is_starter ? 'var(--text)' : 'var(--text-muted)', fontWeight: p.is_starter ? 500 : 400 }}>
+                    <a href={"/players/" + p.player_slug} style={{ fontSize: 13, color: p.is_starter ? 'var(--text)' : 'var(--text-muted)', fontWeight: p.is_starter ? 500 : 400, textDecoration:'none' }}>
                       {p.player_name}
-                    </span>
+                    </a>
                     {p.is_captain && <span style={{ fontSize: 10, color: 'var(--accent)' }}>©</span>}
                     {!p.is_starter && <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>SUB</span>}
                   </div>
