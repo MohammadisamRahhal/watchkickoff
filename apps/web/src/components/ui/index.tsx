@@ -115,7 +115,7 @@ export function StandingsTable({ rows, teamNames, teamCrests }: {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {[...rows].sort((a, b) => a.position - b.position).map((row) => (
             <tr key={row.id} className={`standing-row ${zoneClass(row.zone)}`}>
               <td>{row.position}</td>
               <td>
