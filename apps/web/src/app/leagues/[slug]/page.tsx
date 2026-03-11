@@ -174,44 +174,34 @@ export default async function LeaguePage({ params, searchParams }: Props) {
           {scorers.length === 0 ? (
             <EmptyState message="Top scorers data not available yet." />
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--border)', background: 'var(--surface-2, rgba(255,255,255,0.03))' }}>
-                  <th style={{ padding: '10px 12px', width: 40, textAlign: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>#</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>PLAYER</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>TEAM</th>
-                  <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--green)', fontFamily: 'var(--font-display)' }}>G</th>
-                  <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>A</th>
-                  <th style={{ padding: '10px 16px', textAlign: 'center', fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>MP</th>
-                </tr>
-              </thead>
-              <tbody>
-                {scorers.map((s: any, i: number) => (
-                  <tr key={s.playerId} className="match-row" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                    <td style={{ padding: '12px', textAlign: 'center', width: 40 }}>
-                      {i === 0 ? <span style={{ fontSize: 16 }}>🥇</span>
-                       : i === 1 ? <span style={{ fontSize: 16 }}>🥈</span>
-                       : i === 2 ? <span style={{ fontSize: 16 }}>🥉</span>
-                       : <span style={{ fontSize: 13, color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>{i + 1}</span>}
-                    </td>
-                    <td style={{ padding: '12px 12px 12px 0' }}>
-                      <a href={`/players/${s.playerSlug}`} style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)', textDecoration: 'none' }}>
-                        {s.playerName}
-                      </a>
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      <a href={`/teams/${s.teamSlug}`} style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                        <TeamCrest url={s.teamCrest} name={s.teamName} size={20} />
-                        {s.teamName}
-                      </a>
-                    </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 800, color: 'var(--green)', fontSize: 18, minWidth: 48 }}>{s.goals}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--text-muted)', minWidth: 48 }}>{s.assists}</td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center', fontSize: 13, color: 'var(--text-dim)', minWidth: 48 }}>{s.appearances}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div>
+              {/* Header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 160px 52px 52px 52px', alignItems: 'center', padding: '8px 16px', borderBottom: '2px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', fontFamily: 'var(--font-display)', textAlign: 'center' }}>#</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>PLAYER</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>TEAM</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--font-display)', textAlign: 'center' }}>G</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', fontFamily: 'var(--font-display)', textAlign: 'center' }}>A</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', fontFamily: 'var(--font-display)', textAlign: 'center' }}>MP</span>
+              </div>
+              {scorers.map((s: any, i: number) => (
+                <div key={s.playerId} className="match-row" style={{ display: 'grid', gridTemplateColumns: '40px 1fr 160px 52px 52px 52px', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : <span style={{ fontSize: 13, color: 'var(--text-dim)', fontFamily: 'var(--font-display)' }}>{i + 1}</span>}
+                  </div>
+                  <a href={`/players/${s.playerSlug}`} style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {s.playerName}
+                  </a>
+                  <a href={`/teams/${s.teamSlug}`} style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none', overflow: 'hidden' }}>
+                    <TeamCrest url={s.teamCrest} name={s.teamName} size={18} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.teamName}</span>
+                  </a>
+                  <div style={{ textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 800, color: 'var(--green)', fontSize: 17 }}>{s.goals}</div>
+                  <div style={{ textAlign: 'center', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--text-muted)' }}>{s.assists}</div>
+                  <div style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-dim)' }}>{s.appearances}</div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       )}
