@@ -41,15 +41,15 @@ export async function generateMetadata({ params }: any): Promise<Metadata> {
     const { slug } = await params;
     const team = await getTeamBySlug(slug);
     return {
-      title: `${team.name} — Fixtures, Results & Squad | WatchKickoff`,
-      description: `Latest fixtures, results, standings and squad for ${team.name}.`,
+      title: `${team.name} Fixtures & Results | WatchKickoff`,
+      description: `Latest fixtures and results for ${team.name}.`,
     };
-  } catch { return { title: 'Team | WatchKickoff' }; }
+  } catch { return { title: 'Fixtures' }; }
 }
 
 export const revalidate = 60;
 
-export default async function TeamPage({ params }: any) {
+export default async function TeamFixturesPage({ params }: any) {
   const { slug } = await params;
   const team = await getTeamBySlug(slug).catch(() => null);
   if (!team) notFound();
@@ -67,7 +67,9 @@ export default async function TeamPage({ params }: any) {
       <nav style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, display: 'flex', gap: 8 }}>
         <a href="/" style={{ color: 'var(--text-muted)' }}>Today</a>
         <span>›</span>
-        <span>{team.name}</span>
+        <a href={`/teams/${slug}`} style={{ color: 'var(--text-muted)' }}>{team.name}</a>
+        <span>›</span>
+        <span>Fixtures</span>
       </nav>
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)', borderRadius: 12, padding: '24px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 20 }}>
         {team.crestUrl ? (
@@ -82,22 +84,19 @@ export default async function TeamPage({ params }: any) {
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4, display: 'flex', gap: 12 }}>
             <span>{team.countryCode}</span>
             {matches.length > 0 && <span>· {matches.length} matches</span>}
-            {live.length > 0 && <span style={{ color: 'var(--green)' }}>· 🔴 {live.length} LIVE</span>}
           </div>
         </div>
       </div>
-      {/* Tabs → separate pages */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border-subtle)', marginBottom: 24 }}>
         {tabs.map(t => (
           <a key={t.id} href={t.href} style={{
             padding: '10px 20px', fontSize: 13, fontWeight: 600, textDecoration: 'none',
-            color: 'var(--text-muted)',
-            borderBottom: '2px solid transparent',
+            color: t.id === 'fixtures' ? 'var(--accent)' : 'var(--text-muted)',
+            borderBottom: t.id === 'fixtures' ? '2px solid var(--accent)' : '2px solid transparent',
             marginBottom: -2,
           }}>{t.label.toUpperCase()}</a>
         ))}
       </div>
-      {/* Fixtures preview */}
       <div>
         {matches.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 48, color: 'var(--text-muted)' }}>No fixtures available.</div>

@@ -3,24 +3,22 @@ import { getLeagueBySlug, getLeagueMatches } from '@/lib/api';
 import { MatchRow, MatchGroup, ErrorBanner, EmptyState } from '@/components/ui';
 import { countryFlag, isLive, isFinished } from '@/lib/utils';
 
-interface Props {
-  params: Promise<{ slug: string }>;
-}
+interface Props { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { slug } = await params;
     const league = await getLeagueBySlug(slug);
     return {
-      title: `${league.name} ${league.season} — Fixtures, Standings & Scorers`,
-      description: `Live scores, fixtures, results, standings and top scorers for ${league.name} ${league.season}.`,
+      title: `${league.name} ${league.season} Fixtures & Results`,
+      description: `All fixtures and results for ${league.name} ${league.season}. Live scores, upcoming matches and final results.`,
     };
-  } catch { return { title: 'League' }; }
+  } catch { return { title: 'Fixtures' }; }
 }
 
 export const revalidate = 60;
 
-export default async function LeaguePage({ params }: Props) {
+export default async function LeagueFixturesPage({ params }: Props) {
   const { slug } = await params;
   const [leagueResult, matchesResult] = await Promise.allSettled([
     getLeagueBySlug(slug),
@@ -45,6 +43,7 @@ export default async function LeaguePage({ params }: Props) {
     { id: 'standings', label: 'Standings', href: `/leagues/${slug}/standings` },
     { id: 'scorers',   label: 'Scorers',   href: `/leagues/${slug}/scorers` },
   ];
+  const activeTab = 'fixtures';
 
   return (
     <div className="container" style={{ paddingTop: 20, paddingBottom: 60 }}>
@@ -53,7 +52,9 @@ export default async function LeaguePage({ params }: Props) {
         <span className="breadcrumb__sep">›</span>
         <a href="/leagues">Leagues</a>
         <span className="breadcrumb__sep">›</span>
-        <span style={{ color: 'var(--text-muted)' }}>{league.name}</span>
+        <a href={`/leagues/${slug}`}>{league.name}</a>
+        <span className="breadcrumb__sep">›</span>
+        <span style={{ color: 'var(--text-muted)' }}>Fixtures</span>
       </nav>
 
       <div className="match-hero" style={{ marginBottom: 20, padding: '20px 24px' }}>
@@ -73,22 +74,20 @@ export default async function LeaguePage({ params }: Props) {
         </div>
       </div>
 
-      {/* Tabs → separate pages */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)', marginBottom: 20 }}>
         {tabs.map(({ id, label, href }) => (
           <a key={id} href={href} style={{
             fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700,
             letterSpacing: '0.06em', padding: '10px 20px',
-            color: 'var(--text-dim)',
-            borderBottom: '2px solid transparent',
-            marginBottom: -1,
+            color: activeTab === id ? 'var(--text)' : 'var(--text-dim)',
+            borderBottom: activeTab === id ? '2px solid var(--green)' : '2px solid transparent',
+            marginBottom: -1, display: 'flex', alignItems: 'center', gap: 8,
           }}>
             {label.toUpperCase()}
           </a>
         ))}
       </div>
 
-      {/* Fixtures preview */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {matches.length === 0 ? (
           <EmptyState message="No fixtures available for this league." />
