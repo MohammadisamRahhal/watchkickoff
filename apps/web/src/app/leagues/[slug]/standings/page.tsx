@@ -64,7 +64,7 @@ export default async function LeagueStandingsPage({ params }: Props) {
 
       <div className="match-hero" style={{ marginBottom: 20, padding: '20px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span style={{ fontSize: 40 }}>{flag}</span>
+          <div style={{ width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{league.logo ? <img src={league.logo} alt={league.name} style={{ width: 48, height: 48, objectFit: "contain" }} /> : <span style={{ fontSize: 40 }}>{flag}</span>}</div>
           <div>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1 }}>
               {league.name.toUpperCase()}

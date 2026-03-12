@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const league = await getLeagueBySlug(slug);
     return {
-      title: `${league.name} ${league.season} Fixtures & Results`,
+      title: `${league.name} ${league.season ? `${Number(league.season)}-${Number(league.season)+1}` : league.season} Fixtures & Results`,
       description: `All fixtures and results for ${league.name} ${league.season}. Live scores, upcoming matches and final results.`,
     };
   } catch { return { title: 'Fixtures' }; }
@@ -59,13 +59,13 @@ export default async function LeagueFixturesPage({ params }: Props) {
 
       <div className="match-hero" style={{ marginBottom: 20, padding: '20px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <span style={{ fontSize: 40 }}>{flag}</span>
+          <div style={{ width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{league.logo ? <img src={league.logo} alt={league.name} style={{ width: 48, height: 48, objectFit: "contain" }} /> : <span style={{ fontSize: 40 }}>{flag}</span>}</div>
           <div>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 600, letterSpacing: '0.04em', lineHeight: 1 }}>
               {league.name.toUpperCase()}
             </h1>
             <div style={{ marginTop: 4, color: 'var(--text-muted)', fontSize: 13, display: 'flex', gap: 12 }}>
-              <span>{league.season}</span>
+              <span>{league.season ? `${Number(league.season)}-${Number(league.season)+1}` : ''}</span>
               <span>·</span>
               <span>{league.type}</span>
               {live.length > 0 && <><span>·</span><span style={{ color: 'var(--green)' }}>🔴 {live.length} LIVE</span></>}

@@ -12,7 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <SiteHeader />
-        <main>{children}</main>
+        <main className="site-main">{children}</main>
         <SiteFooter />
       </body>
     </html>
@@ -20,6 +20,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 
 function SiteHeader() {
+  const NAV = [
+    { href: '/',        label: 'Today'            },
+    { href: '/live',    label: 'Live', live: true  },
+    { href: '/leagues', label: 'Leagues'           },
+    { href: '/search',  label: 'Search'            },
+  ];
   return (
     <header className="site-header">
       <div className="container site-header__inner">
@@ -28,14 +34,9 @@ function SiteHeader() {
           <span className="site-logo__text">WATCH<span className="site-logo__accent">KICKOFF</span></span>
         </a>
         <nav className="site-nav">
-          {[
-            { href: '/',        label: 'Today',   dot: false },
-            { href: '/live',    label: 'Live',    dot: true  },
-            { href: '/leagues', label: 'Leagues', dot: false },
-            { href: '/search',  label: 'Search',  dot: false },
-          ].map(({ href, label, dot }) => (
+          {NAV.map(({ href, label, live }) => (
             <a key={href} href={href} className="nav-link">
-              {dot && <span className="nav-link__dot live-dot" style={{ position: 'relative', animation: 'none' }} />}
+              {live && <span className="nav-link__dot live-dot" />}
               {label}
             </a>
           ))}
@@ -56,7 +57,14 @@ function SiteFooter() {
     <footer className="site-footer">
       <div className="container site-footer__inner">
         <span className="site-footer__brand">⚽ WATCHKICKOFF</span>
-        <span>Data by API-Football · Live updates every 60s</span>
+        <span>Data by API-Football · Updates every 60s</span>
+        <div className="site-footer__links">
+          <a href="/leagues">Leagues</a>
+          <span>·</span>
+          <a href="/live">Live</a>
+          <span>·</span>
+          <a href="/search">Search</a>
+        </div>
       </div>
     </footer>
   );

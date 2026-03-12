@@ -12,15 +12,28 @@ export const leaguesQueries = {
   _logger: logger,
 
   async findAll() {
-    return db.select().from(leagues)
-      .where(eq(leagues.isActive, true))
-      .orderBy(leagues.countryCode, leagues.name);
+    const { rows } = await db.execute(sql`
+      SELECT DISTINCT ON (regexp_replace(l.slug, '-[0-9]{4}-[0-9]{4}$', '')) l.*
+      FROM leagues l
+      WHERE l.is_active = true
+      AND l.season IN ('2025', '2026')
+      AND EXISTS (SELECT 1 FROM matches m WHERE m.league_id = l.id)
+      ORDER BY regexp_replace(l.slug, '-[0-9]{4}-[0-9]{4}$', ''), l.season DESC
+    `);
+    return rows;
   },
-
   async findBySlug(slug: string) {
     const rows = await db.select().from(leagues)
       .where(eq(leagues.slug, slug)).limit(1);
-    return rows[0] ?? null;
+    if (rows[0]) return rows[0];
+    const { rows: fuzzy } = await db.execute(sql`
+      SELECT * FROM leagues
+      WHERE slug ~ ('^' || ${slug} || '-[0-9]{4}-[0-9]{4}$')
+         OR slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$')
+      ORDER BY season DESC
+      LIMIT 1
+    `);
+    return (fuzzy[0] as any) ?? null;
   },
 
   async findMatchesByLeagueSlug(slug: string) {
@@ -38,7 +51,9 @@ export const leaguesQueries = {
       JOIN teams at  ON at.id = m.away_team_id
       JOIN leagues l ON l.id  = m.league_id
       WHERE l.slug = ${slug}
-      ORDER BY m.kickoff_at DESC
+         OR l.slug ~ ('^' || ${slug} || '-[0-9]{4}-[0-9]{4}$')
+         OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$')
+      ORDER BY ABS(EXTRACT(EPOCH FROM (m.kickoff_at - NOW()))) ASC
       LIMIT 200
     `);
     return (rows as any[]).map(r => ({
@@ -63,6 +78,8 @@ export const leaguesQueries = {
       JOIN leagues l ON l.id = s.league_id
       JOIN teams   t ON t.id = s.team_id
       WHERE l.slug = ${slug}
+         OR l.slug ~ ('^' || ${slug} || '-[0-9]{4}-[0-9]{4}$')
+         OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$')
       ORDER BY s.team_id, s.position ASC
     `);
     return (rows as any[]).map(r => ({
@@ -86,7 +103,11 @@ export const leaguesQueries = {
       JOIN leagues l  ON l.id  = ss.league_id
       JOIN players p  ON p.id  = ss.player_id
       JOIN teams   t  ON t.id  = ss.team_id
-      WHERE l.slug = ${slug} AND ss.goals > 0
+      WHERE (l.slug = ${slug}
+         OR l.slug ~ ('^' || ${slug} || '-[0-9]{4}-[0-9]{4}$')
+         OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$'))
+        AND ss.goals > 0
+      GROUP BY p.id, p.name, p.slug, t.id, t.name, t.crest_url, t.slug, ss.goals, ss.assists, ss.appearances
       ORDER BY ss.goals DESC, ss.assists DESC
       LIMIT 20
     `);

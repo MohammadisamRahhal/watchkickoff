@@ -10,6 +10,7 @@ export const LeagueSchema = z.object({
   season:         z.string().min(4).max(10),
   type:           LeagueTypeSchema,
   coverageLevel:  z.number().int().min(1).max(3),
+  logo:           z.string().url().nullable().optional(),
   isActive:       z.boolean(),
   createdAt:      z.coerce.date(),
   updatedAt:      z.coerce.date(),

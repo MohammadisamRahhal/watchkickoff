@@ -16,8 +16,8 @@ export const leaguesService = {
     const rows = await leaguesQueries.findAll();
     const result = rows.map(r => ({
       id: r.id, name: r.name, slug: r.slug,
-      countryCode: r.countryCode, season: r.season,
-      type: r.type, isActive: r.isActive, logo: (r.providerRef as any)?.logo ?? null,
+      countryCode: r.countryCode ?? r.country_code, season: r.season,
+      type: r.type, isActive: r.isActive ?? r.is_active, logo: (() => { try { const p = r.providerRef ?? r.provider_ref; return (typeof p === 'string' ? JSON.parse(p) : p)?.logo ?? null; } catch { return null; } })(),
     }));
     await leaguesCache.setAll(result);
     return result;

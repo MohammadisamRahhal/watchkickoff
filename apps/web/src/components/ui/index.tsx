@@ -1,19 +1,13 @@
-/**
- * Shared UI primitives — server-renderable.
- */
 import type { MatchSummary, StandingRow } from '@watchkickoff/shared';
 import { formatKickoff, statusLabel, isLive, isFinished, zoneClass } from '@/lib/utils';
 import Image from 'next/image';
 
-// ── TeamCrest ─────────────────────────────────────────────────────
 interface CrestProps { url: string | null; name: string; size?: number; }
 
 export function TeamCrest({ url, name, size = 24 }: CrestProps) {
   if (!url) {
     return (
-      <div className="match-row__crest-fallback" style={{ width: size, height: size, fontSize: size * 0.45 }}>
-        ⚽
-      </div>
+      <div className="match-row__crest-fallback" style={{ width: size, height: size, fontSize: size * 0.45 }}>⚽</div>
     );
   }
   return (
@@ -23,7 +17,6 @@ export function TeamCrest({ url, name, size = 24 }: CrestProps) {
   );
 }
 
-// ── StatusBadge ───────────────────────────────────────────────────
 export function StatusBadge({ match }: { match: MatchSummary }) {
   const live     = isLive(match.status);
   const finished = isFinished(match.status);
@@ -32,72 +25,76 @@ export function StatusBadge({ match }: { match: MatchSummary }) {
 
   if (live && !isHT) return (
     <span className="status-badge live">
-      <span className="live-dot" />{label || 'LIVE'}
+      <span className="live-dot" style={{ width: 5, height: 5 }} />{label || 'LIVE'}
     </span>
   );
-  if (isHT) return <span className="status-badge ht">HT</span>;
+  if (isHT)     return <span className="status-badge ht">HT</span>;
   if (finished) return <span className="status-badge finished">FT</span>;
-  if (label) return <span className="status-badge upcoming">{label}</span>;
-  return (
-    <span className="status-badge upcoming">
-      {formatKickoff(match.kickoffAt ?? "")}
-    </span>
-  );
+  if (label)    return <span className="status-badge upcoming">{label}</span>;
+  return <span className="status-badge upcoming">{formatKickoff(match.kickoffAt ?? '')}</span>;
 }
 
-// ── MatchRow ──────────────────────────────────────────────────────
 export function MatchRow({ match }: { match: MatchSummary }) {
-  const live     = isLive(match.status);
-  const finished = isFinished(match.status);
+  const live      = isLive(match.status);
+  const finished  = isFinished(match.status);
   const showScore = live || finished;
 
   return (
-    <a href={`/matches/${match.slug}`} className={`match-row${live ? ' live' : ''}`}>
+    <a href={`/matches/${match.slug}`} className={`match-row${live ? ' live' : ''}${finished ? ' finished' : ''}`}>
       <div className="match-row__home">
-        <a href={`/teams/${match.homeTeam.slug}`} className={`match-row__team-name${live ? ' active' : ''}`} style={{textDecoration:'none',color:'inherit'}}>
+        <span className={`match-row__team-name${live || (finished && match.homeScore > match.awayScore) ? ' active' : ''}`}>
           {match.homeTeam.shortName ?? match.homeTeam.name}
-        </a>
+        </span>
         <TeamCrest url={match.homeTeam.crestUrl} name={match.homeTeam.name} size={24} />
       </div>
-
       <div className="match-row__center">
         {showScore ? (
           <div className={`match-row__score${live ? ' live-score' : ''}`}>
-            <span>{match.homeScore}</span>
+            <span className={match.homeScore > match.awayScore ? 'score-winner' : ''}>{match.homeScore}</span>
             <span className="match-row__score-sep">–</span>
-            <span>{match.awayScore}</span>
+            <span className={match.awayScore > match.homeScore ? 'score-winner' : ''}>{match.awayScore}</span>
           </div>
         ) : null}
         <StatusBadge match={match} />
       </div>
-
       <div className="match-row__away">
         <TeamCrest url={match.awayTeam.crestUrl} name={match.awayTeam.name} size={24} />
-        <a href={`/teams/${match.awayTeam.slug}`} className={`match-row__team-name${live ? ' active' : ''}`} style={{textDecoration:'none',color:'inherit'}}>
+        <span className={`match-row__team-name${live || (finished && match.awayScore > match.homeScore) ? ' active' : ''}`}>
           {match.awayTeam.shortName ?? match.awayTeam.name}
-        </a>
+        </span>
       </div>
     </a>
   );
 }
 
-// ── MatchGroup ────────────────────────────────────────────────────
-export function MatchGroup({ label, flag, count, children }: {
-  label: string; flag?: string; count?: number; children: React.ReactNode;
+export function MatchGroup({ label, flag, logoUrl, count, leagueSlug, children }: {
+  label: string; flag?: string; logoUrl?: string | null;
+  count?: number; leagueSlug?: string; children: React.ReactNode;
 }) {
+  const headerContent = (
+    <div className="league-group__header">
+      {logoUrl ? (
+        <div style={{ width: 20, height: 20, position: 'relative', flexShrink: 0 }}>
+          <Image src={logoUrl} alt={label} fill style={{ objectFit: 'contain' }} sizes="20px" unoptimized />
+        </div>
+      ) : (
+        flag && <span className="league-group__flag">{flag}</span>
+      )}
+      <span className="league-group__name">{label}</span>
+      {count != null && <span className="league-group__count">{count} matches</span>}
+      {leagueSlug && <span className="league-group__link-arrow">›</span>}
+    </div>
+  );
   return (
     <div className="league-group">
-      <div className="league-group__header">
-        {flag && <span className="league-group__flag">{flag}</span>}
-        <span className="league-group__name">{label}</span>
-        {count != null && <span className="league-group__count">{count}</span>}
-      </div>
+      {leagueSlug ? (
+        <a href={`/leagues/${leagueSlug}`} style={{ display: 'block', textDecoration: 'none' }}>{headerContent}</a>
+      ) : headerContent}
       {children}
     </div>
   );
 }
 
-// ── StandingsTable ─────────────────────────────────────────────────
 export function StandingsTable({ rows, teamNames, teamCrests, teamSlugs }: {
   rows: StandingRow[];
   teamNames: Record<string, string>;
@@ -108,12 +105,7 @@ export function StandingsTable({ rows, teamNames, teamCrests, teamSlugs }: {
     <div className="standings-wrap">
       <table className="standings-table">
         <thead>
-          <tr>
-            <th>#</th>
-            <th>Team</th>
-            <th>P</th><th>W</th><th>D</th><th>L</th>
-            <th>GD</th><th>Pts</th>
-          </tr>
+          <tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr>
         </thead>
         <tbody>
           {[...rows].sort((a, b) => a.position - b.position).map((row) => (
@@ -123,18 +115,15 @@ export function StandingsTable({ rows, teamNames, teamCrests, teamSlugs }: {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <TeamCrest url={teamCrests[row.teamId] ?? null} name={teamNames[row.teamId] ?? ''} size={20} />
                   {teamSlugs?.[row.teamId]
-                    ? <a href={"/teams/" + teamSlugs[row.teamId]} style={{ color: 'var(--text)', fontWeight: 500, textDecoration: 'none' }}>{teamNames[row.teamId] ?? row.teamId}</a>
+                    ? <a href={'/teams/' + teamSlugs[row.teamId]} style={{ color: 'var(--text)', fontWeight: 500, textDecoration: 'none' }}>{teamNames[row.teamId] ?? row.teamId}</a>
                     : <span style={{ color: 'var(--text)', fontWeight: 500 }}>{teamNames[row.teamId] ?? row.teamId}</span>}
                 </div>
               </td>
-              <td>{row.played}</td>
-              <td>{row.wins}</td>
-              <td>{row.draws}</td>
-              <td>{row.losses}</td>
+              <td>{row.played}</td><td>{row.wins}</td><td>{row.draws}</td><td>{row.losses}</td>
               <td style={{ color: row.goalDiff > 0 ? 'var(--green)' : row.goalDiff < 0 ? 'var(--red)' : 'var(--text-muted)' }}>
                 {row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}
               </td>
-              <td>{row.points}</td>
+              <td style={{ fontWeight: 600 }}>{row.points}</td>
             </tr>
           ))}
         </tbody>
@@ -143,7 +132,6 @@ export function StandingsTable({ rows, teamNames, teamCrests, teamSlugs }: {
   );
 }
 
-// ── EmptyState / ErrorBanner ──────────────────────────────────────
 export function EmptyState({ message }: { message: string }) {
   return (
     <div className="empty-state">
