@@ -59,10 +59,10 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 .date-strip__inner{display:flex;gap:2px;padding:8px 16px;max-width:900px;margin:0 auto}
 .date-pill{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:6px 14px;border-radius:var(--radius-sm);min-width:52px;cursor:pointer}
 .date-pill__day{font-family:var(--font-display);font-size:11px;letter-spacing:0.08em;color:var(--text-muted);text-transform:uppercase;line-height:1}
-.date-pill.active{background:var(--green)}
-.date-pill.active .date-pill__day{color:rgba(0,0,0,0.6)}
+.date-pill.active{background:#1e40af;border-radius:var(--radius-sm)}
+.date-pill.active .date-pill__day{color:rgba(255,255,255,0.7)}
 .date-pill__num{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--text);line-height:1.1}
-.date-pill.active .date-pill__num{color:#000}
+.date-pill.active .date-pill__num{color:#ffffff}
 
 .match-hero{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);margin-bottom:12px}
 .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)}
@@ -163,7 +163,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 .top-leagues-bar__inner{display:flex;align-items:center;gap:4px;padding:8px 16px;max-width:900px;margin:0 auto}
 .top-leagues-bar__label{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:0.1em;color:var(--text-dim);padding-right:8px;flex-shrink:0}
 .top-league-pill{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;background:var(--bg-elevated);border:1px solid var(--border);white-space:nowrap;font-size:12px;color:var(--text-muted);transition:all 0.15s;flex-shrink:0}
-.top-league-pill:hover{background:var(--green-dim);color:var(--text);border-color:var(--green)}
+.top-league-pill:hover{background:rgba(30,64,175,0.08);color:#1e40af;border-color:#1e40af}
 .top-league-pill__name{font-weight:600;font-size:12px}
 
 /* ── Sidebar ── */
@@ -175,5 +175,5 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 .sidebar-league-item:hover{background:var(--bg-hover)}
 .sidebar-league-item__name{flex:1;font-weight:500}
 .sidebar-league-item__arrow{color:var(--text-dim);font-size:14px}
-.sidebar-card__more{display:block;padding:10px 14px;font-size:12px;font-weight:600;color:var(--green);border-top:1px solid var(--border-subtle);text-align:center;transition:background 0.12s}
+.sidebar-card__more{display:block;padding:10px 14px;font-size:12px;font-weight:600;color:#1e40af;border-top:1px solid var(--border-subtle);text-align:center;transition:background 0.12s}
 .sidebar-card__more:hover{background:var(--bg-hover)}
