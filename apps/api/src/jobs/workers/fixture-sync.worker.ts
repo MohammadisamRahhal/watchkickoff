@@ -28,6 +28,7 @@ async function syncTodayFixtures(): Promise<void> {
         externalId: fx.externalLeagueId, name: leagueName,
         countryCode: leagueCode, season: fx.season, type: 'LEAGUE',
         slug: makeLeagueSlug(fx.externalLeagueId, leagueName, fx.season),
+        logo: fx.leagueLogo,
       });
       const homeTeamId = await matchesQueries.upsertTeam({
         externalId: fx.externalHomeTeamId,

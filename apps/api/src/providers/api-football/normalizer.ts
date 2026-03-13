@@ -99,6 +99,11 @@ export function normalizeFixture(raw: ApiFixture): ProviderFixture {
     venue:              raw.fixture.venue?.name ?? undefined,
     rawStatus:          raw.fixture.status.short,
     minute:             raw.fixture.status.elapsed ?? null,
+    leagueName:         raw.league.name ?? undefined,
+    leagueCountryCode:  raw.league.country ?? undefined,
+    leagueLogo:         raw.league.logo ?? undefined,
+    homeTeamName:       raw.teams.home.name ?? undefined,
+    awayTeamName:       raw.teams.away.name ?? undefined,
   };
 }
 

@@ -101,6 +101,8 @@ export function createPlayersSyncWorker(): Worker {
     {
       connection: bullmqConnection,
       concurrency: 1,
+      lockDuration: 300000,
+      lockRenewTime: 60000,
       removeOnComplete: { count: QUEUE_COMPLETED_JOBS_RETAIN },
       removeOnFail:     { count: QUEUE_FAILED_JOBS_RETAIN },
     },

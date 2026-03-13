@@ -33,6 +33,10 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 // ── Matches ─────────────────────────────────────────────────────
 
 /** Today's matches — used on the home page. Revalidated every 60 s via ISR. */
+export async function getMatchesByDate(date: string): Promise<MatchSummary[]> {
+  return apiFetch<MatchSummary[]>(`/matches/by-date/${date}`, { next: { revalidate: 120 } });
+}
+
 export async function getTodayMatches(): Promise<MatchSummary[]> {
   return apiFetch<MatchSummary[]>('/matches/today', {
     next: { revalidate: 60 },

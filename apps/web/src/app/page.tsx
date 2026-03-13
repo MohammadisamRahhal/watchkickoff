@@ -1,63 +1,38 @@
 import type { Metadata } from 'next';
-import { getTodayMatches } from '@/lib/api';
-import { formatDate, countryFlag, isLive, isFinished } from '@/lib/utils';
+import { getTodayMatches, getMatchesByDate } from '@/lib/api';
+import { countryFlag, isLive, isFinished } from '@/lib/utils';
 import { MatchRow, MatchGroup, EmptyState, ErrorBanner } from '@/components/ui';
 import type { MatchSummary } from '@watchkickoff/shared';
 
 export const metadata: Metadata = {
   title: "Today's Football Scores & Results — WatchKickoff",
-  description: "Live scores and results for today's football matches from 500+ leagues worldwide.",
+  description: "Live scores, fixtures and results from 500+ leagues worldwide.",
 };
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
-const TOP_LEAGUE_NAMES = [
-  'UEFA Champions League','Premier League','La Liga','Serie A','Bundesliga','Ligue 1',
-  'UEFA Europa League','UEFA Conference League','FA Cup','Copa del Rey','DFB Pokal',
-  'Coppa Italia','Saudi Pro League','AFC Champions League','World Cup','Euro',
-  'Nations League','MLS','Eredivisie','Primeira Liga',
-];
+const TOP_LEAGUE_NAMES = ['UEFA Champions League','Premier League','La Liga','Serie A','Bundesliga','Ligue 1','UEFA Europa League','UEFA Conference League','FA Cup','Copa del Rey','DFB Pokal','Coppa Italia','Saudi Pro League','AFC Champions League','World Cup','Euro','Nations League','MLS','Eredivisie','Primeira Liga'];
 
 function getLeaguePriority(name: string): number {
   const n = name.toLowerCase();
-  for (let i = 0; i < TOP_LEAGUE_NAMES.length; i++) {
-    if (n.includes(TOP_LEAGUE_NAMES[i].toLowerCase())) return i;
-  }
+  for (let i = 0; i < TOP_LEAGUE_NAMES.length; i++) { if (n.includes(TOP_LEAGUE_NAMES[i].toLowerCase())) return i; }
   return TOP_LEAGUE_NAMES.length;
 }
 
 function groupByLeague(matches: MatchSummary[]) {
-  const groups = new Map<string, {
-    matches: MatchSummary[]; name: string; countryCode: string;
-    logoUrl: string | null; leagueSlug: string; priority: number;
-  }>();
+  const groups = new Map<string, { matches: MatchSummary[]; name: string; countryCode: string; logoUrl: string | null; leagueSlug: string; priority: number; }>();
   for (const m of matches) {
     const id = m.leagueId;
     if (!groups.has(id)) {
       const name = (m as any).leagueName ?? `League ${id.slice(0, 6)}`;
-      groups.set(id, {
-        matches: [], name,
-        countryCode: (m as any).leagueCountryCode ?? 'WW',
-        logoUrl: (m as any).leagueLogoUrl ?? null,
-        leagueSlug: (m as any).leagueSlug ?? '',
-        priority: getLeaguePriority(name),
-      });
+      groups.set(id, { matches: [], name, countryCode: (m as any).leagueCountryCode ?? 'WW', logoUrl: (m as any).leagueLogoUrl ?? null, leagueSlug: (m as any).leagueSlug ?? '', priority: getLeaguePriority(name) });
     }
     groups.get(id)!.matches.push(m);
   }
-  return [...groups.entries()].sort((a, b) => {
-    const pa = a[1].priority, pb = b[1].priority;
-    // دوريات معروفة أولاً
-    if (pa !== pb) return pa - pb;
-    // نفس الأولوية: الأكثر مباريات أولاً
-    const md = b[1].matches.length - a[1].matches.length;
-    if (md !== 0) return md;
-    // نفس العدد: alphabetical
-    return a[1].name.localeCompare(b[1].name);
-  });
+  return [...groups.entries()].sort((a, b) => { const pa = a[1].priority, pb = b[1].priority; if (pa !== pb) return pa - pb; const md = b[1].matches.length - a[1].matches.length; if (md !== 0) return md; return a[1].name.localeCompare(b[1].name); });
 }
 
-function Section({ title, color, dot, items }: { title: string; color: string; dot?: boolean; items: MatchSummary[] }) {
+function Section({ title, color, dot, items }: { title: string; color: string; dot?: boolean; items: MatchSummary[]; }) {
   if (items.length === 0) return null;
   const groups = groupByLeague(items);
   return (
@@ -69,81 +44,81 @@ function Section({ title, color, dot, items }: { title: string; color: string; d
         <span className="section-header__count" style={{ color, background: `${color}18` }}>{items.length}</span>
       </div>
       {groups.map(([leagueId, group]) => (
-        <MatchGroup
-          key={leagueId}
-          label={group.name}
-          flag={countryFlag(group.countryCode)}
-          logoUrl={group.logoUrl}
-          count={group.matches.length}
-          leagueSlug={group.leagueSlug}
-        >
-          {group.matches.map(match => (
-            <MatchRow key={match.id} match={match} />
-          ))}
+        <MatchGroup key={leagueId} label={group.name} flag={countryFlag(group.countryCode)} logoUrl={group.logoUrl} count={group.matches.length} leagueSlug={group.leagueSlug}>
+          {group.matches.map(match => <MatchRow key={match.id} match={match} />)}
         </MatchGroup>
       ))}
     </div>
   );
 }
 
-function buildDateStrip() {
-  const today = new Date();
-  const days = [];
-  for (let i = -3; i <= 3; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    days.push(d);
-  }
-  return days;
-}
+function fmtIso(d: Date) { return d.toISOString().split('T')[0]; }
 
-function fmtStripDay(d: Date) {
-  if (d.toDateString() === new Date().toDateString()) return 'Today';
+function fmtStripDay(d: Date, todayIso: string) {
+  const iso = fmtIso(d);
+  if (iso === todayIso) return 'Today';
+  const t = new Date(); t.setDate(t.getDate() + 1);
+  if (iso === fmtIso(t)) return 'Tomorrow';
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  if (iso === fmtIso(y)) return 'Yesterday';
   return d.toLocaleDateString('en-GB', { weekday: 'short' });
 }
 
-function fmtIso(d: Date) {
-  return d.toISOString().split('T')[0];
+function StatChip({ label, value, color, pulse }: { label: string; value: number; color: string; pulse?: boolean; }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {pulse && value > 0 && <span className="live-dot" />}
+      <span style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 600, color, lineHeight: 1 }}>{value}</span>
+      <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.07em', textTransform: 'uppercase' as const, lineHeight: 1 }}>{label}</span>
+    </div>
+  );
 }
 
 const TOP_LEAGUE_LINKS = [
-  { name: 'UCL',        slug: 'uefa-champions-league-2025-2026', flag: '🇪🇺' },
-  { name: 'EPL',        slug: 'premier-league-2025-2026',        flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
-  { name: 'La Liga',    slug: 'la-liga-2025-2026',               flag: '🇪🇸' },
-  { name: 'Serie A',    slug: 'serie-a-2025-2026',               flag: '🇮🇹' },
-  { name: 'Bundesliga', slug: 'bundesliga-2025-2026',            flag: '🇩🇪' },
-  { name: 'Ligue 1',    slug: 'ligue-1-2025-2026',               flag: '🇫🇷' },
-  { name: 'Saudi PL',   slug: 'saudi-pro-league-2025-2026',      flag: '🇸🇦' },
-  { name: 'Europa',     slug: 'europa-league-2025-2026',         flag: '🇪🇺' },
+  { name: 'UCL', slug: 'uefa-champions-league-2025-2026', flag: '🇪🇺' },
+  { name: 'EPL', slug: 'premier-league-2025-2026', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  { name: 'La Liga', slug: 'la-liga-2025-2026', flag: '🇪🇸' },
+  { name: 'Serie A', slug: 'serie-a-2025-2026', flag: '🇮🇹' },
+  { name: 'Bundesliga', slug: 'bundesliga-2025-2026', flag: '🇩🇪' },
+  { name: 'Ligue 1', slug: 'ligue-1-2025-2026', flag: '🇫🇷' },
+  { name: 'Saudi PL', slug: 'saudi-pro-league-2025-2026', flag: '🇸🇦' },
+  { name: 'Europa', slug: 'europa-league-2025-2026', flag: '🇪🇺' },
 ];
 
-export default async function HomePage() {
+interface Props { searchParams: Promise<{ date?: string }> }
+
+export default async function HomePage({ searchParams }: Props) {
+  const { date: dateParam } = await searchParams;
+  const todayIso = fmtIso(new Date());
+  const isValidDate = dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam);
+  const activeDate = isValidDate ? dateParam : todayIso;
+  const isToday = activeDate === todayIso;
+
   let matches: MatchSummary[] = [];
   let error: string | null = null;
   try {
-    matches = await getTodayMatches();
-  } catch {
-    error = "Could not load today's matches.";
-  }
+    matches = isToday ? await getTodayMatches() : await getMatchesByDate(activeDate);
+  } catch { error = `Could not load matches for ${activeDate}.`; }
 
-  const live     = matches.filter(m => isLive(m.status));
+  const live = matches.filter(m => isLive(m.status));
   const finished = matches.filter(m => isFinished(m.status));
   const upcoming = matches.filter(m => !isLive(m.status) && !isFinished(m.status));
-  const today    = formatDate(new Date());
-  const dateStrip = buildDateStrip();
-  const todayIso  = fmtIso(new Date());
+
+  const displayDate = new Date(activeDate + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const dateStrip: Date[] = [];
+  for (let i = -3; i <= 3; i++) { const d = new Date(); d.setDate(d.getDate() + i); dateStrip.push(d); }
 
   return (
     <>
-      {/* Date Strip */}
       <div className="date-strip">
         <div className="date-strip__inner">
           {dateStrip.map((d) => {
             const iso = fmtIso(d);
-            const isToday = iso === todayIso;
+            const isActive = iso === activeDate;
+            const href = iso === todayIso ? '/' : `/?date=${iso}`;
             return (
-              <a key={iso} href={isToday ? '/' : `/?date=${iso}`} className={`date-pill${isToday ? ' active' : ''}`}>
-                <span className="date-pill__day">{fmtStripDay(d)}</span>
+              <a key={iso} href={href} className={`date-pill${isActive ? ' active' : ''}`}>
+                <span className="date-pill__day">{fmtStripDay(d, todayIso)}</span>
                 <span className="date-pill__num">{d.getDate()}</span>
               </a>
             );
@@ -151,7 +126,6 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Top Leagues Quick Bar */}
       <div className="top-leagues-bar">
         <div className="top-leagues-bar__inner">
           <span className="top-leagues-bar__label">TOP</span>
@@ -164,41 +138,36 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Main + Sidebar layout */}
       <div className="home-layout">
         <div className="home-main">
           <div className="home-hero">
             <div>
-              <h1 className="home-hero__title">TODAY&apos;S MATCHES</h1>
-              <p className="home-hero__date">{today}</p>
+              <h1 className="home-hero__title">{isToday ? "TODAY'S MATCHES" : displayDate.toUpperCase()}</h1>
+              <p className="home-hero__date">{displayDate}</p>
             </div>
             {matches.length > 0 && (
               <div className="stats-bar">
-                <StatChip label="Live"     value={live.length}     color="var(--green)"      pulse={live.length > 0} />
+                <StatChip label="Live" value={live.length} color="var(--green)" pulse={live.length > 0} />
                 <div className="stats-bar__divider" />
                 <StatChip label="Upcoming" value={upcoming.length} color="var(--text-muted)" />
                 <div className="stats-bar__divider" />
                 <StatChip label="Finished" value={finished.length} color="var(--text-dim)" />
-                <div style={{ marginLeft: 'auto', fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--text-dim)', letterSpacing: '0.05em', alignSelf: 'center' }}>
-                  {matches.length} TOTAL
-                </div>
+                <div style={{ marginLeft: 'auto', fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--text-dim)', letterSpacing: '0.05em', alignSelf: 'center' }}>{matches.length} TOTAL</div>
               </div>
             )}
           </div>
 
           {error && <ErrorBanner message={error} />}
-          {matches.length === 0 && !error ? (
-            <EmptyState message="No matches scheduled for today." />
-          ) : (
-            <>
-              <Section title="Live Now" color="var(--green)"      dot  items={live} />
-              <Section title="Upcoming" color="var(--blue-bright)"     items={upcoming} />
-              <Section title="Finished" color="var(--text-muted)"      items={finished} />
-            </>
-          )}
+          {matches.length === 0 && !error
+            ? <EmptyState message={`No matches scheduled for ${displayDate}.`} />
+            : <>
+                <Section title="Live Now" color="var(--green)" dot items={live} />
+                <Section title="Upcoming" color="var(--blue-bright)" items={upcoming} />
+                <Section title="Finished" color="var(--text-muted)" items={finished} />
+              </>
+          }
         </div>
 
-        {/* Sidebar */}
         <aside className="home-sidebar">
           <div className="sidebar-card">
             <div className="sidebar-card__title">TOP LEAGUES</div>
@@ -213,29 +182,17 @@ export default async function HomePage() {
             </div>
             <a href="/leagues" className="sidebar-card__more">All Leagues →</a>
           </div>
-          {live.length > 0 && (
+          {isToday && live.length > 0 && (
             <div className="sidebar-card" style={{ marginTop: 10 }}>
               <div className="sidebar-card__title" style={{ color: 'var(--green)' }}>
                 <span className="live-dot" style={{ marginRight: 6 }} />LIVE NOW
               </div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '6px 0' }}>
-                {live.length} match{live.length !== 1 ? 'es' : ''} in progress
-              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', padding: '6px 0' }}>{live.length} match{live.length !== 1 ? 'es' : ''} in progress</div>
               <a href="/live" className="sidebar-card__more" style={{ color: 'var(--green)' }}>View All Live →</a>
             </div>
           )}
         </aside>
       </div>
     </>
-  );
-}
-
-function StatChip({ label, value, color, pulse }: { label: string; value: number; color: string; pulse?: boolean }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      {pulse && value > 0 && <span className="live-dot" />}
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 600, letterSpacing: '0.02em', color, lineHeight: 1 }}>{value}</span>
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.07em', textTransform: 'uppercase' as const, lineHeight: 1 }}>{label}</span>
-    </div>
   );
 }
