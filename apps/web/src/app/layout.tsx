@@ -31,7 +31,7 @@ function SiteHeader() {
       <div className="site-header__inner">
         <a href="/" className="site-logo">
           <span className="site-logo__icon">⚽</span>
-          <span>WATCH<span style={{ color: "#10b981" }}>KICKOFF</span></span>
+          <span>WATCH<span style={{ color: "#1e40af" }}>KICKOFF</span></span>
         </a>
         <nav className="site-nav">
           {NAV.map(({ href, label, live }) => (
@@ -80,7 +80,7 @@ const FOOTER_COMPANY = [
 function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <div>
-      <div style={{ fontFamily: "var(--font-display)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#10b981", textTransform: "uppercase", marginBottom: 14 }}>{title}</div>
+      <div style={{ fontFamily: "var(--font-display)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#1e40af", textTransform: "uppercase", marginBottom: 14 }}>{title}</div>
       <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 9 }}>
         {links.map(l => (
           <li key={l.label}>
@@ -99,9 +99,9 @@ function SiteFooter() {
 
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-            <span style={{ width: 32, height: 32, background: "#059669", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚽</span>
+            <span style={{ width: 32, height: 32, background: "#1e40af", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚽</span>
             <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, color: "#ffffff", letterSpacing: "0.05em" }}>
-              WATCH<span style={{ color: "#10b981" }}>KICKOFF</span>
+              WATCH<span style={{ color: "#1e40af" }}>KICKOFF</span>
             </span>
           </div>
           <p style={{ lineHeight: 1.7, maxWidth: 240, color: "#6b7f94", fontSize: 13 }}>
@@ -116,7 +116,7 @@ function SiteFooter() {
 
       <div style={{ borderTop: "1px solid #1a2634", padding: "16px", maxWidth: 900, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
         <span style={{ color: "#4a5a6a", fontSize: 12 }}>© 2026 WatchKickoff. All rights reserved.</span>
-        <span style={{ color: "#4a5a6a", fontSize: 12 }}>Data by <a href="https://www.api-football.com" style={{ color: "#10b981", textDecoration: "none" }}>API-Football</a> · Updates every 60s</span>
+        <span style={{ color: "#4a5a6a", fontSize: 12 }}>Data by <a href="https://www.api-football.com" style={{ color: "#1e40af", textDecoration: "none" }}>API-Football</a> · Updates every 60s</span>
       </div>
     </div>
   );

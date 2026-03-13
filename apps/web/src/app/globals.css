@@ -94,7 +94,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 .status-badge.ht{background:var(--yellow-dim);color:var(--yellow)}
 .status-badge.finished{background:var(--bg-elevated);color:var(--text-muted)}
 .status-badge.upcoming{color:var(--text-muted)}
-.live-dot{background:var(--green);border-radius:50%;display:inline-block;animation:pulse 1.2s infinite}
+.live-dot{background:#e53935;border-radius:50%;display:inline-block;animation:pulse 1.2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 
 .breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);margin-bottom:16px;flex-wrap:wrap}
