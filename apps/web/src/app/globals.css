@@ -177,3 +177,10 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 .sidebar-league-item__arrow{color:var(--text-dim);font-size:14px}
 .sidebar-card__more{display:block;padding:10px 14px;font-size:12px;font-weight:600;color:#1e40af;border-top:1px solid var(--border-subtle);text-align:center;transition:background 0.12s}
 .sidebar-card__more:hover{background:var(--bg-hover)}
+
+/* ── Leagues page ── */
+.leagues-page{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+@media(max-width:600px){.leagues-page{padding:16px 10px 60px}}
+
+.league-row-item{display:flex;align-items:center;gap:12px;padding:11px 16px;text-decoration:none;color:var(--text);transition:background 0.12s;cursor:pointer}
+.league-row-item:hover{background:var(--bg-hover)}
