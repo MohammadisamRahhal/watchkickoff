@@ -84,13 +84,14 @@ export default async function LeagueFixturesPage({ params, searchParams }: Props
     .sort((a, b) => a.position - b.position)
     .map((s: any) => ({ id: s.teamId, name: s.teamName, crest: s.teamCrest, slug: s.teamSlug }));
 
-  const selectedTeam = teams.find(t => t.slug === teamSlug) ?? null;
+  const defaultTeamSlug = teamSlug ?? teams[0]?.slug;
+  const selectedTeam = teams.find(t => t.slug === defaultTeamSlug) ?? teams[0] ?? null;
   const teamMatches = selectedTeam
-    ? sorted.filter((m: any) => m.homeTeam.slug === teamSlug || m.awayTeam.slug === teamSlug)
+    ? sorted.filter((m: any) => m.homeTeam.slug === selectedTeam.slug || m.awayTeam.slug === selectedTeam.slug)
     : sorted;
 
-  const byDate  = groupByDate(teamMatches);
-  const byRound = groupByRound(teamMatches);
+  const byDate  = groupByDate(group === "by-team" || group === "by-date" ? teamMatches : sorted);
+  const byRound = groupByRound(sorted);
 
   // current round — find round with most upcoming matches
   const currentRoundNum = (() => {
@@ -127,7 +128,7 @@ export default async function LeagueFixturesPage({ params, searchParams }: Props
         season={season}
         group={group}
         teams={teams}
-        selectedTeamSlug={teamSlug}
+        selectedTeamSlug={defaultTeamSlug}
         roundParam={roundParam}
       />
 
