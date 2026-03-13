@@ -34,8 +34,8 @@ export const leaguesService = {
     await leaguesCache.setLeague(slug, result);
     return result;
   },
-  async getLeagueMatches(slug: string) {
-    const rows = await leaguesQueries.findMatchesByLeagueSlug(slug);
+  async getLeagueMatches(slug: string, season?: string, round?: string) {
+    const rows = await leaguesQueries.findMatchesByLeagueSlug(slug, season, round);
     return rows.map(m => ({
       id: m.id, slug: m.slug, status: m.status, minute: m.minute ?? null,
       kickoffAt: new Date(m.kickoffAt).toISOString(),
@@ -54,6 +54,9 @@ export const leaguesService = {
     const rows = await leaguesQueries.findStandingsByLeagueSlug(slug);
     await leaguesCache.setStandings(slug, rows);
     return rows;
+  },
+  async getLeagueRounds(slug: string, season?: string) {
+    return leaguesQueries.findRoundsByLeagueSlug(slug, season);
   },
   async getLeagueTopScorers(slug: string) {
     const rows = await leaguesQueries.findTopScorersByLeagueSlug(slug);

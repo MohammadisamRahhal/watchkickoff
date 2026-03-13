@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-
-export default function LeaguePage({ params }: { params: { slug: string } }) {
-  redirect(`/leagues/${params.slug}/fixtures`);
+export default async function LeagueRootPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  redirect(`/leagues/${slug}/overview`);
 }

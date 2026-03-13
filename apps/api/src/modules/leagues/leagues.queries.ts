@@ -2,8 +2,7 @@
  * Leagues queries — ALL SQL for the leagues module lives here.
  */
 import { db } from '@infrastructure/database/client.js';
-import { leagues, matches, teams, standings } from '@infrastructure/database/schema.js';
-import { eq, desc, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { createLogger } from '@core/logger.js';
 
 const logger = createLogger('leagues-queries');
@@ -22,21 +21,51 @@ export const leaguesQueries = {
     `);
     return rows;
   },
+
   async findBySlug(slug: string) {
-    const rows = await db.select().from(leagues)
-      .where(eq(leagues.slug, slug)).limit(1);
-    if (rows[0]) return rows[0];
+    const { rows } = await db.execute(sql`
+      SELECT * FROM leagues WHERE slug = ${slug} LIMIT 1
+    `);
+    if (rows[0]) return rows[0] as any;
     const { rows: fuzzy } = await db.execute(sql`
       SELECT * FROM leagues
       WHERE slug ~ ('^' || ${slug} || '-[0-9]{4}-[0-9]{4}$')
          OR slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$')
-      ORDER BY season DESC
-      LIMIT 1
+      ORDER BY season DESC LIMIT 1
     `);
     return (fuzzy[0] as any) ?? null;
   },
 
-  async findMatchesByLeagueSlug(slug: string) {
+  async findSeasonsByLeagueSlug(slug: string) {
+    const { rows } = await db.execute(sql`
+      SELECT DISTINCT l.season, l.slug
+      FROM leagues l
+      WHERE l.slug = ${slug}
+         OR l.slug ~ ('^' || regexp_replace(${slug}, '-[0-9]{4}-[0-9]{4}$', '') || '-[0-9]{4}-[0-9]{4}$')
+      ORDER BY l.season DESC
+    `);
+    return rows as any[];
+  },
+
+  async findRoundsByLeagueSlug(slug: string, season?: string) {
+    const seasonFilter = season ? sql`AND m.season = ${season}` : sql`AND m.season = '2025'`;
+    const { rows } = await db.execute(sql`
+      SELECT DISTINCT m.round
+      FROM matches m
+      JOIN leagues l ON l.id = m.league_id
+      WHERE (l.slug = ${slug}
+         OR l.slug ~ ('^' || ${slug} || '-[0-9]{4}-[0-9]{4}$')
+         OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$'))
+        AND m.round IS NOT NULL
+        ${seasonFilter}
+      ORDER BY m.round
+    `);
+    return (rows as any[]).map(r => r.round).filter(Boolean);
+  },
+
+  async findMatchesByLeagueSlug(slug: string, season?: string, round?: string) {
+    const seasonVal = season ?? '2025';
+    const roundFilter = round ? sql`AND m.round = ${round}` : sql``;
     const { rows } = await db.execute(sql`
       SELECT
         m.id, m.slug, m.status, m.minute, m.kickoff_at,
@@ -50,11 +79,13 @@ export const leaguesQueries = {
       JOIN teams ht  ON ht.id = m.home_team_id
       JOIN teams at  ON at.id = m.away_team_id
       JOIN leagues l ON l.id  = m.league_id
-      WHERE l.slug = ${slug}
+      WHERE (l.slug = ${slug}
          OR l.slug ~ ('^' || ${slug} || '-[0-9]{4}-[0-9]{4}$')
-         OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$')
-      ORDER BY ABS(EXTRACT(EPOCH FROM (m.kickoff_at - NOW()))) ASC
-      LIMIT 200
+         OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$'))
+        AND m.season = ${seasonVal}
+        ${roundFilter}
+      ORDER BY m.kickoff_at ASC
+      LIMIT 500
     `);
     return (rows as any[]).map(r => ({
       id: r.id, slug: r.slug, status: r.status, minute: r.minute,
@@ -98,18 +129,18 @@ export const leaguesQueries = {
       SELECT
         ss.goals, ss.assists, ss.appearances,
         p.id AS player_id, p.name AS player_name, p.slug AS player_slug,
-        t.id AS team_id,   t.name AS team_name,   t.crest_url AS team_crest, t.slug AS team_slug
+        t.id AS team_id, t.name AS team_name, t.crest_url AS team_crest, t.slug AS team_slug
       FROM season_stats ss
-      JOIN leagues l  ON l.id  = ss.league_id
-      JOIN players p  ON p.id  = ss.player_id
-      JOIN teams   t  ON t.id  = ss.team_id
+      JOIN leagues l ON l.id  = ss.league_id
+      JOIN players p ON p.id  = ss.player_id
+      JOIN teams   t ON t.id  = ss.team_id
       WHERE (l.slug = ${slug}
          OR l.slug ~ ('^' || ${slug} || '-[0-9]{4}-[0-9]{4}$')
          OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$'))
         AND ss.goals > 0
       GROUP BY p.id, p.name, p.slug, t.id, t.name, t.crest_url, t.slug, ss.goals, ss.assists, ss.appearances
       ORDER BY ss.goals DESC, ss.assists DESC
-      LIMIT 20
+      LIMIT 50
     `);
     return (rows as any[]).map(r => ({
       goals: r.goals, assists: r.assists, appearances: r.appearances,

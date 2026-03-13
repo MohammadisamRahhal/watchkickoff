@@ -87,9 +87,19 @@ export async function getLeagueBySlug(slug: string): Promise<League> {
 }
 
 /** Fixtures for a league. */
-export async function getLeagueMatches(slug: string): Promise<MatchSummary[]> {
-  return apiFetch<MatchSummary[]>(`/leagues/${slug}/matches`, {
-    next: { revalidate: 300 },
+export async function getLeagueMatches(slug: string, season?: string, round?: string): Promise<MatchSummary[]> {
+  const params = new URLSearchParams();
+  if (season) params.set('season', season);
+  if (round) params.set('round', round);
+  const qs = params.toString() ? '?' + params.toString() : '';
+  return apiFetch<MatchSummary[]>(`/leagues/${slug}/matches${qs}`, {
+    next: { revalidate: round ? 60 : 300 },
+  });
+}
+export async function getLeagueRounds(slug: string, season?: string): Promise<string[]> {
+  const qs = season ? '?season=' + season : '';
+  return apiFetch<string[]>(`/leagues/${slug}/rounds${qs}`, {
+    next: { revalidate: 3600 },
   });
 }
 
@@ -147,3 +157,7 @@ export async function getLeagueScorers(slug: string) {
   return apiFetch<any[]>(`/leagues/${slug}/scorers`, { next: { revalidate: 3600 } });
 }
 
+
+export async function getLeagueTopScorers(slug: string) {
+  return apiFetch<any[]>(`/leagues/${slug}/scorers`, { next: { revalidate: 3600 } });
+}
