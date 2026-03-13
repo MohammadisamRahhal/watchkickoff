@@ -108,10 +108,10 @@ export const leaguesQueries = {
       FROM standings s
       JOIN leagues l ON l.id = s.league_id
       JOIN teams   t ON t.id = s.team_id
-      WHERE l.slug = ${slug}
+      WHERE (l.slug = ${slug}
          OR l.slug ~ ('^' || ${slug} || '-[0-9]{4}-[0-9]{4}$')
-         OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$')
-      ORDER BY s.team_id, s.position ASC
+         OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$'))
+      ORDER BY s.team_id, s.season DESC, s.position ASC
     `);
     return (rows as any[]).map(r => ({
       id: r.id, position: r.position, played: r.played,
