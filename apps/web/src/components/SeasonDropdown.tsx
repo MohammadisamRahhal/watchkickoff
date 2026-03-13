@@ -1,13 +1,16 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 
+interface Season { season: string; slug: string; }
+
 interface Props {
   slug: string;
   currentSeason: string;
   seasons: string[];
+  seasonSlugs?: Season[]; // slug لكل موسم
 }
 
-export default function SeasonDropdown({ slug, currentSeason, seasons }: Props) {
+export default function SeasonDropdown({ slug, currentSeason, seasons, seasonSlugs }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -19,10 +22,21 @@ export default function SeasonDropdown({ slug, currentSeason, seasons }: Props) 
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // 2025 → "25/26"
   const label = (s: string) => {
     const y = Number(s);
-    return `${String(y).slice(2)}/${String(y+1).slice(2)}`;
+    return isNaN(y) ? s : `${String(y).slice(2)}/${String(y + 1).slice(2)}`;
+  };
+
+  // إذا عندنا slugs للمواسم نستخدمها، وإلا نبني slug من pattern
+  const getHref = (s: string) => {
+    if (seasonSlugs) {
+      const found = seasonSlugs.find(x => x.season === s);
+      if (found) return `/leagues/${found.slug}/fixtures`;
+    }
+    // pattern: استبدل السنة في الـ slug الحالي
+    const base = slug.replace(/-\d{4}-\d{4}$/, '');
+    const yr = Number(s);
+    return `/leagues/${base}-${yr}-${yr + 1}/fixtures`;
   };
 
   return (
@@ -45,7 +59,7 @@ export default function SeasonDropdown({ slug, currentSeason, seasons }: Props) 
           overflow: 'hidden',
         }}>
           {seasons.map(s => (
-            <a key={s} href={`/leagues/${slug}/fixtures?season=${s}`} style={{
+            <a key={s} href={getHref(s)} style={{
               display: 'block', padding: '9px 16px',
               fontSize: 13, fontWeight: s === currentSeason ? 700 : 400,
               color: s === currentSeason ? 'var(--green)' : 'var(--text)',

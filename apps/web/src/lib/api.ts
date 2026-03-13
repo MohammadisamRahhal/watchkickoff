@@ -161,3 +161,7 @@ export async function getLeagueScorers(slug: string) {
 export async function getLeagueTopScorers(slug: string) {
   return apiFetch<any[]>(`/leagues/${slug}/scorers`, { next: { revalidate: 3600 } });
 }
+
+export async function getLeagueSeasons(slug: string): Promise<{ season: string; slug: string }[]> {
+  return apiFetch<{ season: string; slug: string }[]>(`/leagues/${slug}/seasons`, { next: { revalidate: 3600 } });
+}

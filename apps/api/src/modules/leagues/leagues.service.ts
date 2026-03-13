@@ -1,39 +1,52 @@
-/**
- * Leagues service — business logic layer.
- */
 import { leaguesQueries } from './leagues.queries.js';
 import { leaguesCache }   from './leagues.cache.js';
 import { createLogger }   from '@core/logger.js';
 const logger = createLogger('leagues-service');
+
 export const leaguesService = {
   _logger: logger,
+
   async getAllLeagues() {
     const cached = await leaguesCache.getAll();
     if (cached) return cached;
     const rows = await leaguesQueries.findAll();
     const result = rows.map(r => ({
       id: r.id, name: r.name, slug: r.slug,
-      countryCode: r.countryCode ?? r.country_code, season: r.season,
-      type: r.type, isActive: r.isActive ?? r.is_active,
-      logo: (r as any).logo ?? (() => { try { const p = r.providerRef ?? r.provider_ref; return (typeof p === 'string' ? JSON.parse(p) : p)?.logo ?? null; } catch { return null; } })(),
+      countryCode: (r as any).country_code ?? (r as any).countryCode ?? null,
+      season: r.season, type: r.type,
+      isActive: (r as any).is_active ?? (r as any).isActive,
+      logo: (r as any).logo ?? (() => {
+        try { const p = (r as any).provider_ref ?? (r as any).providerRef; return (typeof p === 'string' ? JSON.parse(p) : p)?.logo ?? null; } catch { return null; }
+      })(),
     }));
     await leaguesCache.setAll(result);
     return result;
   },
+
   async getLeagueBySlug(slug: string) {
     const cached = await leaguesCache.getLeague(slug);
     if (cached) return cached;
     const row = await leaguesQueries.findBySlug(slug);
     if (!row) return null;
+    const cc = (row as any).country_code ?? (row as any).countryCode ?? null;
     const result = {
       id: row.id, name: row.name, slug: row.slug,
-      countryCode: row.countryCode, season: row.season,
-      type: row.type, isActive: row.isActive,
-      logo: (row as any).logo ?? (row.providerRef as any)?.logo ?? null,
+      countryCode: cc,
+      season: row.season, type: row.type,
+      isActive: (row as any).is_active ?? (row as any).isActive,
+      logo: (row as any).logo ?? (() => {
+        try { const p = (row as any).provider_ref ?? (row as any).providerRef; return (typeof p === 'string' ? JSON.parse(p) : p)?.logo ?? null; } catch { return null; }
+      })(),
     };
     await leaguesCache.setLeague(slug, result);
     return result;
   },
+
+  async getLeagueSeasons(slug: string) {
+    const rows = await leaguesQueries.findSeasonsByLeagueSlug(slug);
+    return rows.map(r => ({ season: r.season, slug: r.slug }));
+  },
+
   async getLeagueMatches(slug: string, season?: string, round?: string) {
     const rows = await leaguesQueries.findMatchesByLeagueSlug(slug, season, round);
     return rows.map(m => ({
@@ -48,6 +61,7 @@ export const leaguesService = {
       awayTeam: { id: m.awayTeam.id, name: m.awayTeam.name, slug: m.awayTeam.slug, shortName: null, crestUrl: m.awayTeam.crestUrl ?? null, countryCode: 'WW' },
     }));
   },
+
   async getLeagueStandings(slug: string) {
     const cached = await leaguesCache.getStandings(slug);
     if (cached) return cached;
@@ -55,11 +69,12 @@ export const leaguesService = {
     await leaguesCache.setStandings(slug, rows);
     return rows;
   },
+
   async getLeagueRounds(slug: string, season?: string) {
     return leaguesQueries.findRoundsByLeagueSlug(slug, season);
   },
+
   async getLeagueTopScorers(slug: string) {
-    const rows = await leaguesQueries.findTopScorersByLeagueSlug(slug);
-    return rows;
+    return leaguesQueries.findTopScorersByLeagueSlug(slug);
   },
 };
