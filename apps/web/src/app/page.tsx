@@ -14,8 +14,16 @@ export const dynamic = 'force-dynamic';
 const TOP_LEAGUE_NAMES = ['UEFA Champions League','Premier League','La Liga','Serie A','Bundesliga','Ligue 1','UEFA Europa League','UEFA Conference League','FA Cup','Copa del Rey','DFB Pokal','Coppa Italia','Saudi Pro League','AFC Champions League','World Cup','Euro','Nations League','MLS','Eredivisie','Primeira Liga'];
 
 function getLeaguePriority(name: string): number {
-  const n = name.toLowerCase();
-  for (let i = 0; i < TOP_LEAGUE_NAMES.length; i++) { if (n.includes(TOP_LEAGUE_NAMES[i].toLowerCase())) return i; }
+  const n = name.toLowerCase().trim();
+  // exact match first
+  for (let i = 0; i < TOP_LEAGUE_NAMES.length; i++) {
+    if (n === TOP_LEAGUE_NAMES[i].toLowerCase()) return i;
+  }
+  // starts-with match (e.g. "Premier League 2025/2026")
+  for (let i = 0; i < TOP_LEAGUE_NAMES.length; i++) {
+    const t = TOP_LEAGUE_NAMES[i].toLowerCase();
+    if (n.startsWith(t) && (n[t.length] === undefined || n[t.length] === ' ' || n[t.length] === '-')) return i + 0.5;
+  }
   return TOP_LEAGUE_NAMES.length;
 }
 

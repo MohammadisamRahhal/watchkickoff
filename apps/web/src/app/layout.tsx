@@ -36,7 +36,6 @@ function SiteHeader() {
         <nav className="site-nav">
           {NAV.map(({ href, label, live }) => (
             <a key={href} href={href} className="nav-link">
-              {live && <span className="nav-link__dot" />}
               {label}
             </a>
           ))}

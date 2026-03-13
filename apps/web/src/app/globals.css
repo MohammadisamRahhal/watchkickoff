@@ -59,7 +59,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 .date-strip__inner{display:flex;gap:2px;padding:8px 16px;max-width:900px;margin:0 auto}
 .date-pill{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:6px 14px;border-radius:var(--radius-sm);min-width:52px;cursor:pointer}
 .date-pill__day{font-family:var(--font-display);font-size:11px;letter-spacing:0.08em;color:var(--text-muted);text-transform:uppercase;line-height:1}
-.date-pill.active{background:#1e40af;border-radius:var(--radius-sm)}
+.date-pill.active{background:#2563eb;border-radius:var(--radius-sm);box-shadow:0 2px 8px rgba(37,99,235,0.3)}
 .date-pill.active .date-pill__day{color:rgba(255,255,255,0.7)}
 .date-pill__num{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--text);line-height:1.1}
 .date-pill.active .date-pill__num{color:#ffffff}
