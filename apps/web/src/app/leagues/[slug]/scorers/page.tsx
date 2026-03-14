@@ -34,8 +34,6 @@ export default async function ScorersPage({ params, searchParams }: Props) {
   );
 
   const season = seasonParam ?? league.season ?? '2025';
-  const maxGoals = scorers.length > 0 ? Math.max(...(scorers as any[]).map((s:any) => s.goals ?? 0)) : 1;
-
   const MEDAL = ['#f59e0b','#94a3b8','#cd7f32'];
 
   return (
@@ -51,51 +49,42 @@ export default async function ScorersPage({ params, searchParams }: Props) {
 
       {scorers.length === 0 ? <EmptyState message="No scorers data available." /> : (
         <div className="card" style={{overflow:'hidden'}}>
-          {/* Header row */}
-          <div style={{display:'grid', gridTemplateColumns:'48px 1fr 160px 56px 56px 64px', padding:'9px 16px', borderBottom:'2px solid var(--border)', background:'var(--bg-elevated)', alignItems:'center'}}>
-            {[['#','left'],['Player','left'],['Team','left'],['Apps','center'],['Ast','center'],['Goals','center']].map(([h,align])=>(
-              <span key={h} style={{fontSize:11,fontWeight:700,color:h==='Goals'?'var(--blue-bright)':'var(--text-dim)',letterSpacing:'0.06em',textTransform:'uppercase' as const,textAlign:align as any}}>{h}</span>
-            ))}
-          </div>
-
-          {(scorers as any[]).map((s: any, i: number) => (
-            <div key={s.playerId ?? i} style={{display:'grid', gridTemplateColumns:'48px 1fr 160px 56px 56px 64px', padding:'11px 16px', borderBottom:'1px solid var(--border-subtle)', alignItems:'center'}}>
-
-              {/* Rank */}
-              <div style={{display:'flex',justifyContent:'center'}}>
-                {i < 3
-                  ? <span style={{width:24,height:24,borderRadius:'50%',background:MEDAL[i],color:'#fff',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800}}>{i+1}</span>
-                  : <span style={{fontSize:13,fontWeight:600,color:'var(--text-muted)',textAlign:'center'}}>{i+1}</span>
-                }
-              </div>
-
-              {/* Player */}
-              <a href={`/players/${s.playerSlug}`} style={{textDecoration:'none',color:'var(--text)',fontWeight:700,fontSize:14,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>
-                {s.playerName}
-              </a>
-
-              {/* Team */}
-              <a href={`/teams/${s.teamSlug}/fixtures`} style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',color:'var(--text-muted)',minWidth:0}}>
-                <TeamCrest url={s.teamCrest??null} name={s.teamName??''} size={20} />
-                <span style={{fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{s.teamName}</span>
-              </a>
-
-              {/* Apps */}
-              <div style={{textAlign:'center' as const,fontSize:13,color:'var(--text-muted)'}}>{s.appearances??'-'}</div>
-
-              {/* Assists */}
-              <div style={{textAlign:'center' as const,fontSize:13,color:'var(--text-muted)',fontWeight:500}}>{s.assists??'-'}</div>
-
-              {/* Goals + bar */}
-              <div style={{display:'flex',flexDirection:'column' as const,alignItems:'center',gap:3}}>
-                <span style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:800,color:'var(--text)',lineHeight:1}}>{s.goals}</span>
-                <div style={{width:'100%',height:3,background:'var(--bg-elevated)',borderRadius:2,overflow:'hidden'}}>
-                  <div style={{width:`${(s.goals/maxGoals)*100}%`,height:'100%',background:'var(--blue-bright)',borderRadius:2}} />
-                </div>
-              </div>
-
-            </div>
-          ))}
+          <table style={{width:'100%', borderCollapse:'collapse'}}>
+            <thead>
+              <tr style={{borderBottom:'2px solid var(--border)', background:'var(--bg-elevated)'}}>
+                <th style={{padding:'10px 14px', textAlign:'left', width:40, fontSize:11, fontWeight:700, letterSpacing:'0.06em', color:'var(--text-dim)', textTransform:'uppercase' as const}}>#</th>
+                <th style={{padding:'10px 14px', textAlign:'left', fontSize:11, fontWeight:700, letterSpacing:'0.06em', color:'var(--text-dim)', textTransform:'uppercase' as const}}>Player</th>
+                <th style={{padding:'10px 14px', textAlign:'left', fontSize:11, fontWeight:700, letterSpacing:'0.06em', color:'var(--text-dim)', textTransform:'uppercase' as const}}>Team</th>
+                <th style={{padding:'10px 14px', textAlign:'center', width:56, fontSize:11, fontWeight:700, letterSpacing:'0.06em', color:'var(--text-dim)', textTransform:'uppercase' as const}}>Apps</th>
+                <th style={{padding:'10px 14px', textAlign:'center', width:56, fontSize:11, fontWeight:700, letterSpacing:'0.06em', color:'var(--text-dim)', textTransform:'uppercase' as const}}>Ast</th>
+                <th style={{padding:'10px 14px', textAlign:'center', width:64, fontSize:11, fontWeight:700, letterSpacing:'0.06em', color:'var(--blue-bright)', textTransform:'uppercase' as const}}>Goals</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(scorers as any[]).map((s: any, i: number) => (
+                <tr key={s.playerId ?? i} style={{borderBottom:'1px solid var(--border-subtle)'}}>
+                  <td style={{padding:'11px 14px'}}>
+                    {i < 3
+                      ? <span style={{width:24,height:24,borderRadius:'50%',background:MEDAL[i],color:'#fff',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800}}>{i+1}</span>
+                      : <span style={{fontSize:13,fontWeight:600,color:'var(--text-muted)'}}>{i+1}</span>
+                    }
+                  </td>
+                  <td style={{padding:'11px 14px'}}>
+                    <a href={`/players/${s.playerSlug}`} style={{textDecoration:'none',color:'var(--text)',fontWeight:600,fontSize:14}}>{s.playerName}</a>
+                  </td>
+                  <td style={{padding:'11px 14px'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <TeamCrest url={s.teamCrest??null} name={s.teamName??''} size={20} />
+                      <a href={`/teams/${s.teamSlug}/fixtures`} style={{textDecoration:'none',color:'var(--text-muted)',fontSize:13}}>{s.teamName}</a>
+                    </div>
+                  </td>
+                  <td style={{padding:'11px 14px',textAlign:'center',color:'var(--text-muted)',fontSize:13}}>{s.appearances??'-'}</td>
+                  <td style={{padding:'11px 14px',textAlign:'center',color:'var(--text-muted)',fontSize:13}}>{s.assists??'-'}</td>
+                  <td style={{padding:'11px 14px',textAlign:'center',fontWeight:800,fontSize:18,fontFamily:'var(--font-display)',color:'var(--text)'}}>{s.goals}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

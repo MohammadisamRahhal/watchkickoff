@@ -145,7 +145,7 @@ export default async function StandingsPage({ params, searchParams }: Props) {
                   <th style={TH}>GA</th>
                   <th style={TH}>GD</th>
                   <th style={{...TH, color:'var(--blue-bright)'}}>Pts</th>
-                  {filter === 'all' && <th style={TH}>Form</th>}
+                  <th style={TH}>Form</th>
                 </tr>
               </thead>
               <tbody>
@@ -175,13 +175,11 @@ export default async function StandingsPage({ params, searchParams }: Props) {
                         {row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}
                       </td>
                       <td style={{padding:'11px 8px', textAlign:'center', fontWeight:800, fontSize:15, color:'var(--text)'}}>{row.points}</td>
-                      {filter === 'all' && (
-                        <td style={{padding:'11px 12px'}}>
+                      <td style={{padding:'11px 12px'}}>
                           <div style={{display:'flex', gap:3, justifyContent:'center'}}>
                             {form.slice(-5).map((r,j) => <FormDot key={j} result={r} />)}
                           </div>
                         </td>
-                      )}
                     </tr>
                   );
                 })}
