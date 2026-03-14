@@ -92,4 +92,80 @@ export const matchesQueries = {
     const { rows } = await db.execute(sql`SELECT ml.is_starter, ml.is_captain, ml.shirt_number, ml.position_code, ml.formation_slot, p.id AS player_id, p.name AS player_name, p.slug AS player_slug, p.position, t.id AS team_id, t.slug AS team_slug FROM match_lineups ml JOIN players p ON p.id = ml.player_id JOIN teams t ON t.id = ml.team_id WHERE ml.match_id = ${matchId} ORDER BY t.id, ml.is_starter DESC, ml.shirt_number ASC`);
     return rows as any[];
   },
+
+  async findByProviderRef(externalId: string): Promise<{ slug: string } | null> {
+    const { rows } = await db.execute(sql`
+      SELECT m.slug FROM matches m
+      WHERE m.provider_ref->>'apiFootball' = ${externalId}
+      LIMIT 1
+    `);
+    if (!(rows as any[]).length) return null;
+    return { slug: (rows as any[])[0].slug };
+  },
+
+  async findH2HMatches(homeTeamId: string, awayTeamId: string, limit: number = 10) {
+    const { rows } = await db.execute(sql`
+      SELECT
+        m.id, m.slug, m.kickoff_at, m.home_score, m.away_score, m.status,
+        ht.id AS ht_id, ht.name AS ht_name, ht.slug AS ht_slug, ht.crest_url AS ht_crest,
+        at.id AS at_id, at.name AS at_name, at.slug AS at_slug, at.crest_url AS at_crest,
+        l.name AS l_name, l.slug AS l_slug
+      FROM matches m
+      JOIN teams ht ON ht.id = m.home_team_id
+      JOIN teams at ON at.id = m.away_team_id
+      LEFT JOIN leagues l ON l.id = m.league_id
+      WHERE (
+        (m.home_team_id = ${homeTeamId} AND m.away_team_id = ${awayTeamId})
+        OR
+        (m.home_team_id = ${awayTeamId} AND m.away_team_id = ${homeTeamId})
+      )
+      AND m.status IN ('FINISHED','AWARDED')
+      ORDER BY m.kickoff_at DESC
+      LIMIT ${limit}
+    `);
+    return (rows as any[]).map(r => ({
+      id: r.id, slug: r.slug, kickoffAt: r.kickoff_at,
+      homeScore: r.home_score, awayScore: r.away_score, status: r.status,
+      homeTeam: { id: r.ht_id, name: r.ht_name, slug: r.ht_slug, crestUrl: r.ht_crest },
+      awayTeam: { id: r.at_id, name: r.at_name, slug: r.at_slug, crestUrl: r.at_crest },
+      league: r.l_name ? { name: r.l_name, slug: r.l_slug } : null,
+    }));
+  },
+
+  async findFullMatchBySlug(slug: string) {
+    const match = await this.findBySlug(slug);
+    if (!match) return null;
+    const id = match.id as string;
+    const events = await this.findEventsByMatchId(id);
+    const lineups = await this.findLineupsByMatchId(id);
+
+    let statistics: any[] = [];
+    try {
+      const { rows } = await db.execute(sql`
+        SELECT type, home_value AS home, away_value AS away
+        FROM match_statistics WHERE match_id = ${id} ORDER BY sort_order ASC
+      `);
+      statistics = rows as any[];
+    } catch { statistics = []; }
+
+    return {
+      id: match.id, slug: match.slug, status: match.status,
+      kickoffAt: match.kickoffAt, season: match.season,
+      round: match.round, venue: match.venue,
+      minute: match.minute, minuteExtra: (match as any).minuteExtra ?? null,
+      homeScore: match.score?.home ?? 0, awayScore: match.score?.away ?? 0,
+      homeScoreHt: match.score?.homeHt ?? null, awayScoreHt: match.score?.awayHt ?? null,
+      homeTeam: match.homeTeam, awayTeam: match.awayTeam, league: match.league,
+      events: events.map((e: any) => ({
+        id: e.id, eventType: e.eventType, minute: e.minute, minuteExtra: e.minuteExtra,
+        teamId: e.teamId, playerName: e.player_name, assistPlayerName: e.assist_name ?? null, detail: e.detail,
+      })),
+      lineups: lineups.map((l: any) => ({
+        id: l.player_id, teamId: l.team_id, playerName: l.player_name, playerSlug: l.player_slug,
+        shirtNumber: l.shirt_number, positionCode: l.position_code,
+        formationSlot: l.formation_slot, isStarter: l.is_starter, isCaptain: l.is_captain,
+      })),
+      statistics,
+    };
+  },
 };
