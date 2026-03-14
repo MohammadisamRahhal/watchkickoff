@@ -157,7 +157,7 @@ export default async function StandingsPage({ params, searchParams }: Props) {
                     <tr key={row.id ?? i} style={{borderBottom:'1px solid var(--border-subtle)'}}>
                       <td style={{padding:'11px 8px 11px 12px', position:'relative'}}>
                         {zoneColor && <span style={{position:'absolute',left:0,top:'20%',bottom:'20%',width:3,borderRadius:2,background:zoneColor}} />}
-                        <span style={{fontSize:13, fontWeight:600, color:'var(--text-muted)', paddingLeft:6}}>{row.position}</span>
+                        <span style={{fontSize:13, fontWeight:600, color:'var(--text-muted)', paddingLeft:6}}>{filter !== 'all' ? i+1 : row.position}</span>
                       </td>
                       <td style={{padding:'11px 12px'}}>
                         <a href={`/teams/${row.teamSlug}/fixtures`} style={{display:'flex',alignItems:'center',gap:10,textDecoration:'none',color:'var(--text)'}}>
