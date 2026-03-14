@@ -272,7 +272,7 @@ export function normalizeLineup(raw: ApiLineup): NormalizedLineupEntry[] {
     entries.push({
       externalTeamId,
       externalPlayerId: String(player.id),
-      playerName:       player.name,
+      playerName:       player.name ?? 'Unknown',
       shirtNumber:      player.number ?? null,
       positionCode:     player.pos ?? null,
       formationSlot:    player.grid ? parseInt(player.grid.split(':')[0], 10) : null,
@@ -285,7 +285,7 @@ export function normalizeLineup(raw: ApiLineup): NormalizedLineupEntry[] {
     entries.push({
       externalTeamId,
       externalPlayerId: String(player.id),
-      playerName:       player.name,
+      playerName:       player.name ?? 'Unknown',
       shirtNumber:      player.number ?? null,
       positionCode:     player.pos ?? null,
       formationSlot:    null,
@@ -302,7 +302,7 @@ export function normalizeTopScorer(raw: ApiPlayer): NormalizedTopScorer | null {
   if (!stat) return null;
   return {
     externalPlayerId: String(raw.player.id),
-    playerName:       raw.player.name,
+    playerName:       raw.player.name ?? 'Unknown',
     externalTeamId:   String(stat.team.id),
     externalLeagueId: String(stat.league.id),
     season:           String(stat.league.season),

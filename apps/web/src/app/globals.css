@@ -184,3 +184,7 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 
 .league-row-item{display:flex;align-items:center;gap:12px;padding:11px 16px;text-decoration:none;color:var(--text);transition:background 0.12s;cursor:pointer}
 .league-row-item:hover{background:var(--bg-hover)}
+
+/* ── Footer ── */
+.footer-grid{max-width:900px;margin:0 auto;padding:40px 16px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px}
+@media(max-width:600px){.footer-grid{grid-template-columns:1fr;gap:24px;padding:28px 16px}}

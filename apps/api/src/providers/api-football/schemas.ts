@@ -205,8 +205,8 @@ export const ApiPlayersResponseSchema = ApiResponseWrapper(ApiPlayerSchema);
 // ── Lineups response ───────────────────────────────────────────────────────
 
 export const ApiLineupPlayerSchema = z.object({
-  id:     z.number(),
-  name:   z.string(),
+  id:     z.number().nullable().optional(),
+  name:   z.string().nullable().optional(),
   number: z.number().nullable().optional(),
   pos:    z.string().nullable().optional(),
   grid:   z.string().nullable().optional(),
