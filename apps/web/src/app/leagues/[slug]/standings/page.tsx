@@ -138,9 +138,9 @@ export default async function StandingsPage({ params, searchParams }: Props) {
                   <th style={{...TH, textAlign:'left', width:36, paddingLeft:12}}>#</th>
                   <th style={{...TH, textAlign:'left', paddingLeft:12}}>Team</th>
                   <th style={TH}>P</th>
-                  <th style={TH}>W</th>
-                  <th style={TH}>D</th>
-                  <th style={TH}>L</th>
+                  <th style={TH} className="resp-hide">W</th>
+                  <th style={TH} className="resp-hide">D</th>
+                  <th style={TH} className="resp-hide">L</th>
                   <th style={{...TH,display:"none"}} className="hide-mobile">GF</th>
                   <th style={{...TH,display:"none"}} className="hide-mobile">GA</th>
                   <th style={TH}>GD</th>

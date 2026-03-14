@@ -225,3 +225,9 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
   .standings-table { min-width:0 !important; font-size:12px }
   .standings-table th,.standings-table td { padding:8px 4px !important }
 }
+
+@media(max-width:600px){
+  .resp-hide { display:none !important }
+  /* Scorers table */
+  .scorers-table-mins { display:none !important }
+}
