@@ -10,7 +10,6 @@ interface Props {
 export default function SeasonDropdown({ slug, currentSeason, seasons, seasonSlugs }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -18,20 +17,16 @@ export default function SeasonDropdown({ slug, currentSeason, seasons, seasonSlu
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
-
   const label = (s: string) => {
     const y = Number(s);
     return isNaN(y) ? s : `${String(y).slice(2)}/${String(y+1).slice(2)}`;
   };
-
-  // استخرج الـ tab الحالي من الـ URL
   const getCurrentTab = () => {
     if (typeof window === 'undefined') return 'overview';
     const parts = window.location.pathname.split('/');
     const last = parts[parts.length - 1];
     return ['overview','fixtures','standings','scorers'].includes(last) ? last : 'overview';
   };
-
   const getHref = (s: string) => {
     const tab = getCurrentTab();
     if (seasonSlugs) {
@@ -42,7 +37,6 @@ export default function SeasonDropdown({ slug, currentSeason, seasons, seasonSlu
     const yr = Number(s);
     return `/leagues/${base}-${yr}-${yr+1}/${tab}`;
   };
-
   return (
     <div ref={ref} style={{position:'relative', display:'inline-block'}}>
       <button onClick={() => setOpen(!open)} style={{
@@ -54,22 +48,25 @@ export default function SeasonDropdown({ slug, currentSeason, seasons, seasonSlu
         <span style={{fontSize:13, fontWeight:700, color:'var(--text)'}}>{label(currentSeason)}</span>
         <span style={{fontSize:10, color:'var(--text-muted)', display:'inline-block', transform:open?'rotate(180deg)':'none', transition:'0.2s'}}>▼</span>
       </button>
-
       {open && (
         <div style={{
           position:'absolute', top:'calc(100% + 4px)', left:0, zIndex:200,
           background:'var(--bg-card)', border:'1px solid var(--border)',
           borderRadius:8, minWidth:100, boxShadow:'0 8px 24px rgba(0,0,0,0.15)',
           overflow:'hidden',
+          maxHeight:'280px',
+          overflowY:'auto',
+          scrollbarWidth:'thin',
         }}>
           {seasons.map(s => (
             <a key={s} href={getHref(s)} onClick={() => setOpen(false)} style={{
               display:'block', padding:'9px 16px',
               fontSize:13, fontWeight:s===currentSeason?700:400,
-              color:s===currentSeason?'#1e40af':'var(--text)',
+              color:s===currentSeason?'var(--green)':'var(--text)',
               textDecoration:'none',
-              background:s===currentSeason?'rgba(30,64,175,0.08)':'transparent',
+              background:s===currentSeason?'var(--green-dim)':'transparent',
               borderBottom:'1px solid var(--border-subtle)',
+              whiteSpace:'nowrap',
             }}>
               {label(s)}
             </a>
