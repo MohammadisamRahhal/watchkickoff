@@ -160,8 +160,8 @@ export const leaguesQueries = {
         t.id AS team_id, t.name AS team_name, t.crest_url AS team_crest, t.slug AS team_slug,
         COUNT(CASE WHEN me.event_type = 'YELLOW' THEN 1 END)::int AS yellow_cards,
         COUNT(CASE WHEN me.event_type IN ('RED','SECOND_YELLOW') THEN 1 END)::int AS red_cards,
-        MAX(ss.appearances) AS appearances,
-        MAX(ss.minutes_played) AS minutes_played
+        COUNT(DISTINCT m.id) AS appearances,
+        0 AS minutes_played
       FROM match_events me
       JOIN matches m ON m.id = me.match_id
       JOIN leagues l ON l.id = m.league_id
@@ -178,7 +178,9 @@ export const leaguesQueries = {
         CASE WHEN ${type} = 'red'
           THEN COUNT(CASE WHEN me.event_type IN ('RED','SECOND_YELLOW') THEN 1 END)
           ELSE COUNT(CASE WHEN me.event_type = 'YELLOW' THEN 1 END)
-        END DESC
+        END DESC,
+        COUNT(CASE WHEN me.event_type = 'YELLOW' THEN 1 END) DESC,
+        p.name ASC
       LIMIT 30
     `);
     return (rows as any[]).map(r => ({
