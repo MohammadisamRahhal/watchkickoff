@@ -3,7 +3,7 @@ import "./globals.css";
 import { headers } from "next/headers";
 
 export const metadata: Metadata = {
-  title: { default: "WatchKickoff — Live Football Scores", template: "%s · WatchKickoff" },
+  title: { default: "WatchKickoff — Live Football Scores", template: "%s | WatchKickoff" },
   description: "Live football scores, fixtures, standings and match details from 500+ leagues worldwide.",
   openGraph: { type: "website", siteName: "WatchKickoff" },
 };
