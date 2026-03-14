@@ -50,7 +50,7 @@ export const matchesQueries = {
   },
 
   async findEventsByMatchId(matchId: string) {
-    const { rows } = await db.execute(sql`SELECT me.id, me.event_type AS "eventType", me.minute, me.minute_extra AS "minuteExtra", me.team_id AS "teamId", me.player_id AS "playerId", me.detail, me.meta, p.slug AS player_slug, p.name AS player_name, t.slug AS team_slug FROM match_events me LEFT JOIN players p ON p.id = me.player_id LEFT JOIN teams t ON t.id = me.team_id WHERE me.match_id = ${matchId} ORDER BY me.minute, me.minute_extra`);
+    const { rows } = await db.execute(sql`SELECT me.id, me.event_type AS "eventType", me.minute, me.minute_extra AS "minuteExtra", me.team_id AS "teamId", me.player_id AS "playerId", me.detail, p2.slug AS assist_slug, me.meta, p.slug AS player_slug, p.name AS player_name, t.slug AS team_slug FROM match_events me LEFT JOIN players p ON p.id = me.player_id LEFT JOIN teams t ON t.id = me.team_id WHERE me.match_id = ${matchId} ORDER BY me.minute, me.minute_extra`);
     return rows as any[];
   },
 
@@ -158,7 +158,7 @@ export const matchesQueries = {
       homeTeam: match.homeTeam, awayTeam: match.awayTeam, league: match.league,
       events: events.map((e: any) => ({
         id: e.id, eventType: e.eventType, minute: e.minute, minuteExtra: e.minuteExtra,
-        teamId: e.teamId, playerName: e.player_name, assistPlayerName: e.assist_name ?? null, detail: e.detail,
+        teamId: e.teamId, playerName: e.player_name, playerSlug: e.player_slug ?? null, assistPlayerName: e.assist_name ?? null, detail: e.detail,
       })),
       lineups: lineups.map((l: any) => ({
         id: l.player_id, teamId: l.team_id, playerName: l.player_name, playerSlug: l.player_slug,
