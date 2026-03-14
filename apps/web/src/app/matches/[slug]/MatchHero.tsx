@@ -47,7 +47,7 @@ export default function MatchHero({ match }: { match: any }) {
         {league?.logoUrl && <img src={league.logoUrl} alt="" width={16} height={16} style={{objectFit:'contain'}} onError={(e:any)=>{e.target.style.display='none';}} />}
         {league && <Link href={`/leagues/${league.slug}/fixtures`} className="mh-league">{league.name}</Link>}
         {round && <span className="mh-round">· {round}</span>}
-      </div>
+      </Link>
 
       {/* Score row */}
       <div className="mh-row">
@@ -61,14 +61,14 @@ export default function MatchHero({ match }: { match: any }) {
           {homeGoals.length > 0 && (
             <div className="mh-goals">
               {homeGoals.map((e: any, i: number) => (
-                <div key={i} className="mh-goal-item">
+                <Link key={i} href={e.playerSlug ? `/players/${e.playerSlug}` : '#'} className="mh-goal-item">
                   ⚽ {e.playerName} <span className="mh-goal-min">{minStr(e)}</span>
                   {e.eventType==='OWN_GOAL' && <span className="mh-og">(OG)</span>}
-                </div>
+                </Link>
               ))}
-            </div>
+            </Link>
           )}
-        </div>
+        </Link>
 
         {/* Center */}
         <div className="mh-center">
@@ -83,11 +83,11 @@ export default function MatchHero({ match }: { match: any }) {
                 <span className="mh-num">{awayScore}</span>
               </>
             )}
-          </div>
+          </Link>
           {isFinished && homeScoreHt!=null && <div className="mh-ht">HT {homeScoreHt} – {awayScoreHt}</div>}
-          <div className="mh-date">{dateStr} · {timeStr}</div>
+          <div className="mh-date">{dateStr} · {timeStr}</Link>
           {venue && <div className="mh-venue">🏟 {venue}</div>}
-        </div>
+        </Link>
 
         {/* Away */}
         <div className="mh-team mh-team-away">
@@ -99,15 +99,15 @@ export default function MatchHero({ match }: { match: any }) {
           {awayGoals.length > 0 && (
             <div className="mh-goals mh-goals-away">
               {awayGoals.map((e: any, i: number) => (
-                <div key={i} className="mh-goal-item">
+                <Link key={i} href={e.playerSlug ? `/players/${e.playerSlug}` : '#'} className="mh-goal-item">
                   ⚽ {e.playerName} <span className="mh-goal-min">{minStr(e)}</span>
                   {e.eventType==='OWN_GOAL' && <span className="mh-og">(OG)</span>}
-                </div>
+                </Link>
               ))}
-            </div>
+            </Link>
           )}
-        </div>
-      </div>
+        </Link>
+      </Link>
 
       <style jsx>{`
         .mh { background:var(--bg-card,#fff); border:1px solid var(--border,#e2e5ea); border-radius:12px; padding:1.5rem 2rem; margin-bottom:1.5rem; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
@@ -121,7 +121,7 @@ export default function MatchHero({ match }: { match: any }) {
         .mh-tlink { display:flex; flex-direction:column; align-items:center; gap:0.5rem; text-decoration:none; }
         .mh-tname { font-family:var(--font-display,'Teko',sans-serif); font-size:1.1rem; font-weight:600; color:var(--text,#0f1923); text-align:center; max-width:150px; line-height:1.2; }
         .mh-goals { margin-top:0.5rem; display:flex; flex-direction:column; gap:2px; }
-        .mh-goal-item { font-size:0.72rem; color:var(--text-muted); white-space:nowrap; }
+        .mh-goal-item { font-size:0.72rem; color:var(--text-muted); white-space:nowrap; text-decoration:none; display:block; transition:color 0.15s; } .mh-goal-item:hover { color:var(--text); }
         .mh-goal-min { color:var(--text-dim,#a0aab4); }
         .mh-og { color:#dc2626; font-size:0.65rem; }
         .mh-center { display:flex; flex-direction:column; align-items:center; gap:0.35rem; min-width:160px; padding-top:0.5rem; }
@@ -141,6 +141,6 @@ export default function MatchHero({ match }: { match: any }) {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.65} }
         @media(max-width:600px) { .mh{padding:1rem;} .mh-num{font-size:2.8rem;} .mh-tname{font-size:0.9rem;max-width:90px;} .mh-center{min-width:110px;} }
       `}</style>
-    </div>
+    </Link>
   );
 }
