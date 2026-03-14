@@ -20,7 +20,6 @@ export default function MatchHero({ match }: { match: any }) {
   const isScheduled = ['SCHEDULED','PRE_MATCH'].includes(status);
   const isFinished = status === 'FINISHED';
 
-  // استخرج أسماء الأهداف من الـ events
   const events = match.events || [];
   const homeGoals = events.filter((e: any) =>
     ['GOAL','PENALTY_SCORED','OWN_GOAL'].includes(e.eventType) && e.teamId === homeTeam?.id
@@ -32,32 +31,27 @@ export default function MatchHero({ match }: { match: any }) {
   const kickoffDate = new Date(kickoffAt);
   const dateStr = kickoffDate.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
   const timeStr = kickoffDate.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+  const minStr = (e: any) => e.minuteExtra&&e.minuteExtra>0 ? `${e.minute}+${e.minuteExtra}'` : `${e.minute}'`;
 
   function Crest({ src, name }: { src?: string; name: string }) {
     const fb = `https://ui-avatars.com/api/?name=${encodeURIComponent(name.slice(0,2))}&size=80&background=e8eaed&color=0f1923&bold=true`;
     return <img src={src||fb} alt={name} width={72} height={72} style={{objectFit:'contain'}} onError={(e:any)=>{e.target.src=fb;}} />;
   }
 
-  function minStr(e: any) { return e.minuteExtra&&e.minuteExtra>0 ? `${e.minute}+${e.minuteExtra}'` : `${e.minute}'`; }
-
   return (
     <div className="mh">
-      {/* League */}
       <div className="mh-meta">
         {league?.logoUrl && <img src={league.logoUrl} alt="" width={16} height={16} style={{objectFit:'contain'}} onError={(e:any)=>{e.target.style.display='none';}} />}
         {league && <Link href={`/leagues/${league.slug}/fixtures`} className="mh-league">{league.name}</Link>}
         {round && <span className="mh-round">· {round}</span>}
-      </Link>
+      </div>
 
-      {/* Score row */}
       <div className="mh-row">
-        {/* Home */}
         <div className="mh-team">
           <Link href={`/teams/${homeTeam?.slug}/fixtures`} className="mh-tlink">
             <Crest src={homeTeam?.crestUrl} name={homeTeam?.name||'Home'} />
             <span className="mh-tname">{homeTeam?.name}</span>
           </Link>
-          {/* Home goals */}
           {homeGoals.length > 0 && (
             <div className="mh-goals">
               {homeGoals.map((e: any, i: number) => (
@@ -66,11 +60,10 @@ export default function MatchHero({ match }: { match: any }) {
                   {e.eventType==='OWN_GOAL' && <span className="mh-og">(OG)</span>}
                 </Link>
               ))}
-            </Link>
+            </div>
           )}
-        </Link>
+        </div>
 
-        {/* Center */}
         <div className="mh-center">
           <StatusBadge status={status} minute={minute} minuteExtra={minuteExtra} />
           <div className="mh-score">
@@ -83,31 +76,29 @@ export default function MatchHero({ match }: { match: any }) {
                 <span className="mh-num">{awayScore}</span>
               </>
             )}
-          </Link>
+          </div>
           {isFinished && homeScoreHt!=null && <div className="mh-ht">HT {homeScoreHt} – {awayScoreHt}</div>}
-          <div className="mh-date">{dateStr} · {timeStr}</Link>
+          <div className="mh-date">{dateStr} · {timeStr}</div>
           {venue && <div className="mh-venue">🏟 {venue}</div>}
-        </Link>
+        </div>
 
-        {/* Away */}
-        <div className="mh-team mh-team-away">
+        <div className="mh-team">
           <Link href={`/teams/${awayTeam?.slug}/fixtures`} className="mh-tlink">
             <Crest src={awayTeam?.crestUrl} name={awayTeam?.name||'Away'} />
             <span className="mh-tname">{awayTeam?.name}</span>
           </Link>
-          {/* Away goals */}
           {awayGoals.length > 0 && (
-            <div className="mh-goals mh-goals-away">
+            <div className="mh-goals">
               {awayGoals.map((e: any, i: number) => (
                 <Link key={i} href={e.playerSlug ? `/players/${e.playerSlug}` : '#'} className="mh-goal-item">
                   ⚽ {e.playerName} <span className="mh-goal-min">{minStr(e)}</span>
                   {e.eventType==='OWN_GOAL' && <span className="mh-og">(OG)</span>}
                 </Link>
               ))}
-            </Link>
+            </div>
           )}
-        </Link>
-      </Link>
+        </div>
+      </div>
 
       <style jsx>{`
         .mh { background:var(--bg-card,#fff); border:1px solid var(--border,#e2e5ea); border-radius:12px; padding:1.5rem 2rem; margin-bottom:1.5rem; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
@@ -117,11 +108,11 @@ export default function MatchHero({ match }: { match: any }) {
         .mh-round { color:var(--text-muted); }
         .mh-row { display:grid; grid-template-columns:1fr auto 1fr; align-items:flex-start; gap:1rem; }
         .mh-team { display:flex; flex-direction:column; align-items:center; }
-        .mh-team-away { align-items:center; }
         .mh-tlink { display:flex; flex-direction:column; align-items:center; gap:0.5rem; text-decoration:none; }
         .mh-tname { font-family:var(--font-display,'Teko',sans-serif); font-size:1.1rem; font-weight:600; color:var(--text,#0f1923); text-align:center; max-width:150px; line-height:1.2; }
         .mh-goals { margin-top:0.5rem; display:flex; flex-direction:column; gap:2px; }
-        .mh-goal-item { font-size:0.72rem; color:var(--text-muted); white-space:nowrap; text-decoration:none; display:block; transition:color 0.15s; } .mh-goal-item:hover { color:var(--text); }
+        .mh-goal-item { font-size:0.72rem; color:var(--text-muted); white-space:nowrap; text-decoration:none; display:block; transition:color 0.15s; }
+        .mh-goal-item:hover { color:var(--accent,#1d4ed8); }
         .mh-goal-min { color:var(--text-dim,#a0aab4); }
         .mh-og { color:#dc2626; font-size:0.65rem; }
         .mh-center { display:flex; flex-direction:column; align-items:center; gap:0.35rem; min-width:160px; padding-top:0.5rem; }
@@ -141,6 +132,6 @@ export default function MatchHero({ match }: { match: any }) {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.65} }
         @media(max-width:600px) { .mh{padding:1rem;} .mh-num{font-size:2.8rem;} .mh-tname{font-size:0.9rem;max-width:90px;} .mh-center{min-width:110px;} }
       `}</style>
-    </Link>
+    </div>
   );
 }
