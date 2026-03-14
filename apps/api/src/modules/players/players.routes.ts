@@ -1,20 +1,27 @@
-import type { FastifyInstance } from 'fastify';
+import { FastifyInstance } from 'fastify';
 import { playersService } from './players.service.js';
-import { createLogger } from '@core/logger.js';
-const logger = createLogger('players-routes');
-export async function registerPlayersRoutes(fastify: FastifyInstance): Promise<void> {
-  fastify.get('/:slug', async (req, reply) => {
-    const { slug } = (req as any).params;
-    const player = await playersService.getPlayerBySlug(slug);
-    if (!player) return reply.code(404).send({ error: 'Player not found' });
-    return reply.send(player);
+
+export async function registerPlayersRoutes(app: FastifyInstance) {
+  app.get('/:slug', async (req, reply) => {
+    const { slug } = req.params as { slug: string };
+    const data = await playersService.getPlayerBySlug(slug);
+    if (!data) return reply.status(404).send({ error: { code: 'NOT_FOUND', message: 'Player not found' } });
+    return reply.send({ data });
   });
-  fastify.get('/:slug/stats', async (req, reply) => {
-    const { slug } = (req as any).params;
-    const player = await playersService.getPlayerBySlug(slug);
-    if (!player) return reply.code(404).send({ error: 'Player not found' });
-    const stats = await playersService.getPlayerStats(player.id);
-    return reply.send(stats);
+
+  app.get('/:slug/stats', async (req, reply) => {
+    const { slug } = req.params as { slug: string };
+    const { season } = req.query as { season?: string };
+    return reply.send({ data: await playersService.getPlayerStats(slug, season) });
   });
-  logger.debug('Players routes registered');
+
+  app.get('/:slug/career', async (req, reply) => {
+    const { slug } = req.params as { slug: string };
+    return reply.send({ data: await playersService.getPlayerCareer(slug) });
+  });
+
+  app.get('/:slug/matches', async (req, reply) => {
+    const { slug } = req.params as { slug: string };
+    return reply.send({ data: await playersService.getPlayerRecentMatches(slug) });
+  });
 }

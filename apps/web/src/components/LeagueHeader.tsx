@@ -29,9 +29,6 @@ const FLAG_OVERRIDES: Record<string, string> = {
   'GB': 'gb-eng',
 };
 
-// مواسم ثابتة دايماً تظهر
-const DEFAULT_SEASONS = ['2022', '2023', '2024', '2025'];
-
 export default async function LeagueHeader({ league, activeTab, season, liveCount = 0 }: Props) {
   const { slug } = league;
   const yr = Number(season);
@@ -43,9 +40,14 @@ export default async function LeagueHeader({ league, activeTab, season, liveCoun
   const flagUrl = flagCode && cc !== 'WW' ? `https://flagcdn.com/24x18/${flagCode}.png` : null;
   const countryName = cc ? (COUNTRY_NAMES[cc] ?? null) : null;
 
-  // دمج المواسم من DB مع المواسم الثابتة
+  // كل المواسم من الـ DB مرتبة من الأحدث للأقدم
   const dbSeasons = seasonSlugs.map(s => s.season);
-  const allSeasons = [...new Set([...DEFAULT_SEASONS, ...dbSeasons])].sort((a, b) => Number(b) - Number(a));
+  const allSeasons = [...new Set(dbSeasons)]
+    .filter(s => !isNaN(Number(s)))
+    .sort((a, b) => Number(b) - Number(a));
+
+  // إذا ما في مواسم من DB، نحط الحالي على الأقل
+  const seasons = allSeasons.length > 0 ? allSeasons : [season];
 
   const tabs = [
     { id: 'overview',  label: 'OVERVIEW',  href: `/leagues/${slug}/overview` },
@@ -64,7 +66,6 @@ export default async function LeagueHeader({ league, activeTab, season, liveCoun
               : <span style={{ fontSize: 40 }}>⚽</span>}
           </div>
           <div>
-            {/* اسم + سنة بنفس اللون والخط */}
             <h1 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--text)', lineHeight: 1.2 }}>
               {league.name}{' '}
               <span style={{ fontWeight: 700, color: 'var(--text)' }}>{yr}/{yr + 1}</span>
@@ -75,7 +76,7 @@ export default async function LeagueHeader({ league, activeTab, season, liveCoun
               <SeasonDropdown
                 slug={slug}
                 currentSeason={season}
-                seasons={allSeasons}
+                seasons={seasons}
                 seasonSlugs={seasonSlugs}
               />
               {liveCount > 0 && <span style={{ fontSize: 12, color: 'var(--green)', fontWeight: 700 }}>🔴 {liveCount} LIVE</span>}
@@ -84,7 +85,6 @@ export default async function LeagueHeader({ league, activeTab, season, liveCoun
         </div>
       </div>
 
-      {/* Tabs بدون scrollbar */}
       <div style={{
         display: 'flex', background: 'var(--surface)',
         borderBottom: '1px solid var(--border)', marginBottom: 20,
