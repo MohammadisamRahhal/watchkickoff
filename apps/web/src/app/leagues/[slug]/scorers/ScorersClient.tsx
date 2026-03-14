@@ -92,8 +92,8 @@ export default function ScorersClient({ scorers, yellows, reds, slug }: Props) {
                 <th style={{...TH,width:44,textAlign:'center' as const}}>#</th>
                 <th style={{...TH,textAlign:'left' as const}}>Player</th>
                 <th style={{...TH,textAlign:'left' as const}}>Team</th>
-                <th style={{...TH,textAlign:'center' as const,width:52}}>Apps</th>
-                <th style={{...TH,textAlign:'center' as const,width:64}}>Mins</th>
+                {!['yellow','red'].includes(tab) && <th style={{...TH,textAlign:'center' as const,width:52}}>Apps</th>}
+                {!['yellow','red'].includes(tab) && <th style={{...TH,textAlign:'center' as const,width:64}}>Mins</th>}
                 <th style={{...TH,textAlign:'center' as const,width:64,color:'var(--blue-bright)'}}>{colLabel}</th>
               </tr>
             </thead>
@@ -117,8 +117,8 @@ export default function ScorersClient({ scorers, yellows, reds, slug }: Props) {
                       <a href={`/teams/${s.teamSlug}/fixtures`} style={{textDecoration:'none',color:'var(--text-muted)',fontSize:13}}>{s.teamName}</a>
                     </div>
                   </td>
-                  <td style={{padding:'11px 14px',textAlign:'center' as const,fontSize:13,color:'var(--text-muted)'}}>{s.appearances??'-'}</td>
-                  <td style={{padding:'11px 14px',textAlign:'center' as const,fontSize:13,color:'var(--text-muted)'}}>{s.minutesPlayed>0?s.minutesPlayed:'-'}</td>
+                  {!['yellow','red'].includes(tab) && <td style={{padding:'11px 14px',textAlign:'center' as const,fontSize:13,color:'var(--text-muted)'}}>{s.appearances??'-'}</td>}
+                  {!['yellow','red'].includes(tab) && <td style={{padding:'11px 14px',textAlign:'center' as const,fontSize:13,color:'var(--text-muted)'}}>{s.minutesPlayed>0?s.minutesPlayed:'-'}</td>}
                   <td style={{padding:'11px 14px',textAlign:'center' as const}}>
                     <span style={{fontFamily:'var(--font-display)',fontSize:20,fontWeight:800,color:valColor}}>{fmtVal(s)}</span>
                   </td>
