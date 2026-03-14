@@ -132,7 +132,7 @@ export default async function StandingsPage({ params, searchParams }: Props) {
       {rows.length === 0 ? <EmptyState message="Standings not available yet." /> : (
         <div className="card" style={{overflow:'hidden', marginBottom:16}}>
           <div style={{overflowX:'auto'}}>
-            <table style={{width:'100%', borderCollapse:'collapse', minWidth:500}}>
+            <table style={{width:'100%', borderCollapse:'collapse', minWidth:340}}>
               <thead>
                 <tr style={{borderBottom:'1px solid var(--border)', background:'var(--bg-elevated)'}}>
                   <th style={{...TH, textAlign:'left', width:36, paddingLeft:12}}>#</th>
@@ -141,8 +141,8 @@ export default async function StandingsPage({ params, searchParams }: Props) {
                   <th style={TH}>W</th>
                   <th style={TH}>D</th>
                   <th style={TH}>L</th>
-                  <th style={TH}>GF</th>
-                  <th style={TH}>GA</th>
+                  <th style={{...TH,display:"none"}} className="hide-mobile">GF</th>
+                  <th style={{...TH,display:"none"}} className="hide-mobile">GA</th>
                   <th style={TH}>GD</th>
                   <th style={{...TH, color:'var(--blue-bright)'}}>Pts</th>
                   <th style={TH}>Form</th>

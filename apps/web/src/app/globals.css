@@ -188,3 +188,40 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 /* ── Footer ── */
 .footer-grid{max-width:900px;margin:0 auto;padding:40px 16px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:32px}
 @media(max-width:600px){.footer-grid{grid-template-columns:1fr;gap:24px;padding:28px 16px}}
+
+/* ── Mobile fixes ── */
+@media(max-width:600px){
+  /* Standings table — hide Form + GD on mobile, show only essentials */
+  .standings-table th:nth-child(9),
+  .standings-table td:nth-child(9),
+  .standings-table th:nth-child(11),
+  .standings-table td:nth-child(11){ display:none }
+  
+  /* League header tabs — smaller text */
+  .league-tabs-inner a { padding:10px 12px !important; font-size:11px !important; }
+  
+  /* Scorers table — hide Mins on mobile */
+  .scorers-table th:nth-child(5),
+  .scorers-table td:nth-child(5){ display:none }
+}
+
+/* ── Standings responsive ── */
+@media(max-width:600px){
+  .standings-wrap { font-size:12px }
+  .standings-table { min-width:0 !important }
+  .standings-table th,.standings-table td { padding:7px 4px !important }
+  /* hide GF GA on small screens */
+  .col-gf,.col-ga { display:none }
+}
+
+/* ── Scorers responsive ── */  
+@media(max-width:600px){
+  .scorers-mins { display:none }
+}
+
+/* ── Responsive table columns ── */
+@media(max-width:640px){
+  .resp-hide { display:none !important }
+  .standings-table { min-width:0 !important; font-size:12px }
+  .standings-table th,.standings-table td { padding:8px 4px !important }
+}
