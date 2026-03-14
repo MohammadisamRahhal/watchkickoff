@@ -15,32 +15,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   } catch { return { title: 'Top Scorers · WatchKickoff' }; }
 }
 
-function RankBadge({rank}: {rank: number}) {
-  const gold   = {background:'#f59e0b',color:'#fff'};
-  const silver = {background:'#94a3b8',color:'#fff'};
-  const bronze = {background:'#cd7f32',color:'#fff'};
-  const style = rank===1?gold:rank===2?silver:rank===3?bronze:{background:'var(--bg-elevated)',color:'var(--text-muted)'};
-  return (
-    <span style={{width:26,height:26,borderRadius:'50%',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,flexShrink:0,...style}}>
-      {rank}
-    </span>
-  );
-}
-
-function GoalBar({goals, max}: {goals: number; max: number}) {
-  const pct = max > 0 ? (goals / max) * 100 : 0;
-  return (
-    <div style={{display:'flex',alignItems:'center',gap:8,width:'100%'}}>
-      <div style={{flex:1,height:4,background:'var(--bg-elevated)',borderRadius:2,overflow:'hidden'}}>
-        <div style={{width:`${pct}%`,height:'100%',background:'var(--blue-bright)',borderRadius:2,transition:'width 0.3s'}} />
-      </div>
-      <span style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:800,color:'var(--text)',minWidth:32,textAlign:'right',lineHeight:1}}>
-        {goals}
-      </span>
-    </div>
-  );
-}
-
 export default async function ScorersPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { season: seasonParam } = await searchParams;
@@ -62,6 +36,8 @@ export default async function ScorersPage({ params, searchParams }: Props) {
   const season = seasonParam ?? league.season ?? '2025';
   const maxGoals = scorers.length > 0 ? Math.max(...(scorers as any[]).map((s:any) => s.goals ?? 0)) : 1;
 
+  const MEDAL = ['#f59e0b','#94a3b8','#cd7f32'];
+
   return (
     <div className="container" style={{paddingTop:20, paddingBottom:60}}>
       <nav className="breadcrumb">
@@ -75,34 +51,28 @@ export default async function ScorersPage({ params, searchParams }: Props) {
 
       {scorers.length === 0 ? <EmptyState message="No scorers data available." /> : (
         <div className="card" style={{overflow:'hidden'}}>
-          {/* Header */}
-          <div style={{display:'grid', gridTemplateColumns:'44px 1fr 180px 60px 60px', alignItems:'center', padding:'10px 16px', borderBottom:'2px solid var(--border)', background:'var(--bg-elevated)'}}>
-            <span style={{fontSize:11,fontWeight:700,color:'var(--text-dim)',letterSpacing:'0.06em',textTransform:'uppercase' as const}}>#</span>
-            <span style={{fontSize:11,fontWeight:700,color:'var(--text-dim)',letterSpacing:'0.06em',textTransform:'uppercase' as const}}>Player</span>
-            <span style={{fontSize:11,fontWeight:700,color:'var(--text-dim)',letterSpacing:'0.06em',textTransform:'uppercase' as const}}>Team</span>
-            <span style={{fontSize:11,fontWeight:700,color:'var(--text-dim)',letterSpacing:'0.06em',textTransform:'uppercase' as const, textAlign:'center' as const}}>Apps</span>
-            <span style={{fontSize:11,fontWeight:700,color:'var(--text-dim)',letterSpacing:'0.06em',textTransform:'uppercase' as const, textAlign:'center' as const}}>Ast</span>
+          {/* Header row */}
+          <div style={{display:'grid', gridTemplateColumns:'48px 1fr 160px 56px 56px 64px', padding:'9px 16px', borderBottom:'2px solid var(--border)', background:'var(--bg-elevated)', alignItems:'center'}}>
+            {[['#','left'],['Player','left'],['Team','left'],['Apps','center'],['Ast','center'],['Goals','center']].map(([h,align])=>(
+              <span key={h} style={{fontSize:11,fontWeight:700,color:h==='Goals'?'var(--blue-bright)':'var(--text-dim)',letterSpacing:'0.06em',textTransform:'uppercase' as const,textAlign:align as any}}>{h}</span>
+            ))}
           </div>
 
           {(scorers as any[]).map((s: any, i: number) => (
-            <div key={s.playerId ?? i} style={{
-              display:'grid', gridTemplateColumns:'44px 1fr 180px 60px 60px',
-              alignItems:'center', padding:'14px 16px',
-              borderBottom:'1px solid var(--border-subtle)',
-              background: i < 3 ? `rgba(${i===0?'245,158,11':i===1?'148,163,184':'205,127,50'},0.04)` : undefined,
-            }}>
+            <div key={s.playerId ?? i} style={{display:'grid', gridTemplateColumns:'48px 1fr 160px 56px 56px 64px', padding:'11px 16px', borderBottom:'1px solid var(--border-subtle)', alignItems:'center'}}>
+
               {/* Rank */}
               <div style={{display:'flex',justifyContent:'center'}}>
-                <RankBadge rank={i+1} />
+                {i < 3
+                  ? <span style={{width:24,height:24,borderRadius:'50%',background:MEDAL[i],color:'#fff',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:800}}>{i+1}</span>
+                  : <span style={{fontSize:13,fontWeight:600,color:'var(--text-muted)',textAlign:'center'}}>{i+1}</span>
+                }
               </div>
 
-              {/* Player + goal bar */}
-              <div style={{display:'flex',flexDirection:'column' as const, gap:6, paddingRight:16, minWidth:0}}>
-                <a href={`/players/${s.playerSlug}`} style={{fontWeight:700,fontSize:14,color:'var(--text)',textDecoration:'none',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>
-                  {s.playerName}
-                </a>
-                <GoalBar goals={s.goals} max={maxGoals} />
-              </div>
+              {/* Player */}
+              <a href={`/players/${s.playerSlug}`} style={{textDecoration:'none',color:'var(--text)',fontWeight:700,fontSize:14,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>
+                {s.playerName}
+              </a>
 
               {/* Team */}
               <a href={`/teams/${s.teamSlug}/fixtures`} style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',color:'var(--text-muted)',minWidth:0}}>
@@ -114,7 +84,16 @@ export default async function ScorersPage({ params, searchParams }: Props) {
               <div style={{textAlign:'center' as const,fontSize:13,color:'var(--text-muted)'}}>{s.appearances??'-'}</div>
 
               {/* Assists */}
-              <div style={{textAlign:'center' as const,fontSize:14,fontWeight:600,color:'var(--text-muted)'}}>{s.assists??'-'}</div>
+              <div style={{textAlign:'center' as const,fontSize:13,color:'var(--text-muted)',fontWeight:500}}>{s.assists??'-'}</div>
+
+              {/* Goals + bar */}
+              <div style={{display:'flex',flexDirection:'column' as const,alignItems:'center',gap:3}}>
+                <span style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:800,color:'var(--text)',lineHeight:1}}>{s.goals}</span>
+                <div style={{width:'100%',height:3,background:'var(--bg-elevated)',borderRadius:2,overflow:'hidden'}}>
+                  <div style={{width:`${(s.goals/maxGoals)*100}%`,height:'100%',background:'var(--blue-bright)',borderRadius:2}} />
+                </div>
+              </div>
+
             </div>
           ))}
         </div>
