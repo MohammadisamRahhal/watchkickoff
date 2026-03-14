@@ -12,8 +12,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const l = await getLeagueBySlug(slug);
     const yr = Number(l.season ?? 2025);
-    return { title: `${l.name} ${yr}/${yr+1} — Overview` };
-  } catch { return { title: 'League Overview' }; }
+    return { title: `${l.name} ${yr}/${yr+1} Overview` };
+  } catch { return { title: 'Overview' }; }
 }
 
 function SectionCard({ title, href, linkLabel, children }: { title: string; href?: string; linkLabel?: string; children: React.ReactNode }) {
