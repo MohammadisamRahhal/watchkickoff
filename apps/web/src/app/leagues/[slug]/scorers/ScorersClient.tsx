@@ -13,9 +13,9 @@ interface Player {
 interface Props { scorers: Player[]; yellows: Player[]; reds: Player[]; slug: string; }
 
 const TABS = [
-  { id:'goals',   label:'⚽ Goals',   key:'goals',       src:'scorers', showPer90:true  },
-  { id:'assists', label:'🅰️ Assists', key:'assists',     src:'scorers', showPer90:true  },
-  { id:'shots',   label:'🎯 Shots',   key:'shotsTotal',  src:'scorers', showPer90:true  },
+  { id:'goals',   label:'⚽ Goals',   key:'goals',       src:'scorers', showPer90:false  },
+  { id:'assists', label:'🅰️ Assists', key:'assists',     src:'scorers', showPer90:false  },
+  { id:'shots',   label:'🎯 Shots',   key:'shotsTotal',  src:'scorers', showPer90:false  },
   { id:'rating',  label:'⭐ Rating',  key:'rating',      src:'scorers', showPer90:false },
   { id:'yellow',  label:'🟨 Yellow',  key:'yellowCards', src:'yellows', showPer90:false },
   { id:'red',     label:'🟥 Red',     key:'redCards',    src:'reds',    showPer90:false },
@@ -93,7 +93,7 @@ export default function ScorersClient({ scorers, yellows, reds, slug }: Props) {
                 <th style={{...TH,textAlign:'left' as const}}>Player</th>
                 <th style={{...TH,textAlign:'left' as const}}>Team</th>
                 <th style={{...TH,textAlign:'center' as const,width:52}}>Apps</th>
-                {showPer90 && <th style={{...TH,textAlign:'center' as const,width:52}}>/90</th>}
+                <th style={{...TH,textAlign:'center' as const,width:64}}>Mins</th>
                 <th style={{...TH,textAlign:'center' as const,width:64,color:'var(--blue-bright)'}}>{colLabel}</th>
               </tr>
             </thead>
@@ -118,7 +118,7 @@ export default function ScorersClient({ scorers, yellows, reds, slug }: Props) {
                     </div>
                   </td>
                   <td style={{padding:'11px 14px',textAlign:'center' as const,fontSize:13,color:'var(--text-muted)'}}>{s.appearances??'-'}</td>
-                  {showPer90 && <td style={{padding:'11px 14px',textAlign:'center' as const,fontSize:12,color:'var(--text-dim)',fontStyle:'italic'}}>{fmtPer90(s)}</td>}
+                  <td style={{padding:'11px 14px',textAlign:'center' as const,fontSize:13,color:'var(--text-muted)'}}>{s.minutesPlayed>0?s.minutesPlayed:'-'}</td>
                   <td style={{padding:'11px 14px',textAlign:'center' as const}}>
                     <span style={{fontFamily:'var(--font-display)',fontSize:20,fontWeight:800,color:valColor}}>{fmtVal(s)}</span>
                   </td>
