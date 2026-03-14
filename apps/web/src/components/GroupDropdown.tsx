@@ -38,9 +38,9 @@ export default function GroupDropdown({ slug, season, group, teams, selectedTeam
     <div style={{ marginBottom: 20 }}>
       {/* Pills row */}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-        <a href={`/leagues/${slug}/fixtures?season=${season}&group=by-date`} style={PILL(group === 'by-date')}>By date</a>
-        <a href={`/leagues/${slug}/fixtures?season=${season}&group=by-round`} style={PILL(group === 'by-round')}>By round</a>
-        <a href={`/leagues/${slug}/fixtures?season=${season}&group=by-team`} style={PILL(group === 'by-team')}>By team</a>
+        <a href={`/leagues/${slug}/fixtures?group=by-date`} style={PILL(group === 'by-date')}>By date</a>
+        <a href={`/leagues/${slug}/fixtures?group=by-round`} style={PILL(group === 'by-round')}>By round</a>
+        <a href={`/leagues/${slug}/fixtures?group=by-team`} style={PILL(group === 'by-team')}>By team</a>
 
         {/* Team selector — only when by-team */}
         {group === 'by-team' && teams.length > 0 && (
@@ -65,7 +65,7 @@ export default function GroupDropdown({ slug, season, group, teams, selectedTeam
               }}>
                 {teams.map(team => (
                   <a key={team.id}
-                    href={`/leagues/${slug}/fixtures?season=${season}&group=by-team&team=${team.slug}`}
+                    href={`/leagues/${slug}/fixtures?group=by-team&team=${team.slug}`}
                     onClick={() => setTeamOpen(false)}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10,

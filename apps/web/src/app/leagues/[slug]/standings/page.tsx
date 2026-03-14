@@ -125,7 +125,7 @@ export default async function StandingsPage({ params, searchParams }: Props) {
 
       <div style={{display:'flex', gap:6, marginBottom:16}}>
         {([['all','All'],['home','Home'],['away','Away']] as [string,string][]).map(([val,label]) => (
-          <a key={val} href={`/leagues/${slug}/standings?filter=${val}&season=${season}`} style={FILTER_BTN(filter===val)}>{label}</a>
+          <a key={val} href={`/leagues/${slug}/standings?filter=${val}`} style={FILTER_BTN(filter===val)}>{label}</a>
         ))}
       </div>
 
