@@ -141,8 +141,8 @@ export default async function StandingsPage({ params, searchParams }: Props) {
                   <th style={TH}>W</th>
                   <th style={TH}>D</th>
                   <th style={TH}>L</th>
-                  <th style={{...TH,display:"none"}} className="hide-mobile">GF</th>
-                  <th style={{...TH,display:"none"}} className="hide-mobile">GA</th>
+                  <th style={TH}>GF</th>
+                  <th style={TH}>GA</th>
                   <th style={TH}>GD</th>
                   <th style={{...TH, color:'var(--blue-bright)'}}>Pts</th>
                   <th style={TH}>Form</th>
