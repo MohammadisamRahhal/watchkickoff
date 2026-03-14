@@ -79,8 +79,8 @@ export default function LineupPitch({ lineups, homeTeamId, awayTeamId, homeTeamN
     </div>
   );
 
-  const home = lineups.filter(p => p.teamId === homeTeamId);
-  const away = lineups.filter(p => p.teamId === awayTeamId);
+  const home = homeTeamId ? lineups.filter(p => p.teamId === homeTeamId) : [];
+  const away = awayTeamId ? lineups.filter(p => p.teamId === awayTeamId) : [];
   const homeSubs = home.filter(p => !p.isStarter);
   const awaySubs = away.filter(p => !p.isStarter);
 
