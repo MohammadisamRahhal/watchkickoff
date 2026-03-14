@@ -87,7 +87,7 @@ export const leaguesQueries = {
       ORDER BY m.kickoff_at ASC
       LIMIT 500
     `);
-    return (rows as any[]).map(r => ({
+    return (rows as any[]).map((r:any) => ({
       id: r.id, slug: r.slug, status: r.status, minute: r.minute,
       kickoffAt: r.kickoff_at, season: r.season, round: r.round, venue: r.venue,
       homeTeamId: r.home_team_id, awayTeamId: r.away_team_id, leagueId: r.league_id,
@@ -113,7 +113,7 @@ export const leaguesQueries = {
          OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$'))
       ORDER BY s.team_id, s.season DESC, s.position ASC
     `);
-    return (rows as any[]).map(r => ({
+    return (rows as any[]).map((r:any) => ({
       id: r.id, position: r.position, played: r.played,
       wins: r.wins, draws: r.draws, losses: r.losses,
       goalsFor: r.goals_for, goalsAgainst: r.goals_against,
@@ -127,7 +127,9 @@ export const leaguesQueries = {
   async findTopScorersByLeagueSlug(slug: string) {
     const { rows } = await db.execute(sql`
       SELECT
-        ss.goals, ss.assists, ss.appearances,
+        ss.goals, ss.assists, ss.appearances, ss.minutes_played,
+        ss.shots_total, ss.shots_on_target, ss.yellow_cards, ss.red_cards,
+        ss.rating, ss.passes_total, ss.pass_accuracy,
         p.id AS player_id, p.name AS player_name, p.slug AS player_slug,
         t.id AS team_id, t.name AS team_name, t.crest_url AS team_crest, t.slug AS team_slug
       FROM season_stats ss
@@ -138,12 +140,15 @@ export const leaguesQueries = {
          OR l.slug ~ ('^' || ${slug} || '-[0-9]{4}-[0-9]{4}$')
          OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$'))
         AND ss.goals > 0
-      GROUP BY p.id, p.name, p.slug, t.id, t.name, t.crest_url, t.slug, ss.goals, ss.assists, ss.appearances
+      GROUP BY p.id, p.name, p.slug, t.id, t.name, t.crest_url, t.slug, ss.goals, ss.assists, ss.appearances, ss.minutes_played, ss.shots_total, ss.shots_on_target, ss.yellow_cards, ss.red_cards, ss.rating, ss.passes_total, ss.pass_accuracy
       ORDER BY ss.goals DESC, ss.assists DESC
       LIMIT 50
     `);
-    return (rows as any[]).map(r => ({
+    return (rows as any[]).map((r:any) => ({
       goals: r.goals, assists: r.assists, appearances: r.appearances,
+      minutesPlayed: r.minutes_played, shotsTotal: r.shots_total,
+      shotsOnTarget: r.shots_on_target, yellowCards: r.yellow_cards,
+      redCards: r.red_cards, rating: r.rating,
       playerId: r.player_id, playerName: r.player_name, playerSlug: r.player_slug,
       teamId: r.team_id, teamName: r.team_name, teamCrest: r.team_crest, teamSlug: r.team_slug,
     }));

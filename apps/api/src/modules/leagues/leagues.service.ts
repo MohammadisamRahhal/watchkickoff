@@ -49,7 +49,7 @@ export const leaguesService = {
 
   async getLeagueMatches(slug: string, season?: string, round?: string) {
     const rows = await leaguesQueries.findMatchesByLeagueSlug(slug, season, round);
-    return rows.map(m => ({
+    return rows.map((m:any) => ({
       id: m.id, slug: m.slug, status: m.status, minute: m.minute ?? null,
       kickoffAt: new Date(m.kickoffAt).toISOString(),
       homeTeamId: m.homeTeamId, awayTeamId: m.awayTeamId, leagueId: m.leagueId,
