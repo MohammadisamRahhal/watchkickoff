@@ -235,3 +235,10 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
   .standings-table th,.standings-table td{padding:7px 6px;font-size:12px}
   .site-logo{font-size:20px;padding-right:12px}
 }
+
+/* ── Mobile table scroll fix ── */
+.standings-wrap { -webkit-overflow-scrolling: touch; overflow-x: auto; }
+.card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media(max-width:600px){
+  table { min-width: max-content; }
+}
