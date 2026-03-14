@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getLeagueBySlug, getLeagueScorers } from '@/lib/api';
+import { getLeagueBySlug, getLeagueScorers, getLeagueCards } from '@/lib/api';
 import { ErrorBanner } from '@/components/ui';
 import LeagueHeader from '@/components/LeagueHeader';
 import ScorersClient from './ScorersClient';
@@ -23,13 +23,17 @@ export default async function ScorersPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { season: seasonParam } = await searchParams;
 
-  const [leagueRes, scorersRes] = await Promise.allSettled([
+  const [leagueRes, scorersRes, yellowRes, redRes] = await Promise.allSettled([
     getLeagueBySlug(slug),
     getLeagueScorers(slug),
+    getLeagueCards(slug, 'yellow'),
+    getLeagueCards(slug, 'red'),
   ]);
 
   const league  = leagueRes.status  === 'fulfilled' ? leagueRes.value  : null;
   const scorers = scorersRes.status === 'fulfilled' ? scorersRes.value as any[] : [];
+  const yellows = yellowRes.status  === 'fulfilled' ? yellowRes.value  as any[] : [];
+  const reds    = redRes.status     === 'fulfilled' ? redRes.value     as any[] : [];
 
   if (!league) return (
     <div className="container" style={{paddingTop:28}}>
@@ -48,7 +52,7 @@ export default async function ScorersPage({ params, searchParams }: Props) {
         <span style={{color:'var(--text-muted)'}}>Stats</span>
       </nav>
       <LeagueHeader league={league} activeTab="scorers" season={season} />
-      <ScorersClient scorers={scorers} slug={slug} />
+      <ScorersClient scorers={scorers} yellows={yellows} reds={reds} slug={slug} />
     </div>
   );
 }

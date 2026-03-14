@@ -39,4 +39,9 @@ export async function registerLeaguesRoutes(fastify: FastifyInstance) {
     const { slug } = req.params;
     return leaguesService.getLeagueTopScorers(slug);
   });
+  fastify.get('/:slug/cards', async (req: any, _reply) => {
+    const { slug } = req.params;
+    const { type = 'yellow' } = req.query as any;
+    return leaguesService.getLeagueCards(slug, type);
+  });
 }

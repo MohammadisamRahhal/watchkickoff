@@ -77,4 +77,7 @@ export const leaguesService = {
   async getLeagueTopScorers(slug: string) {
     return leaguesQueries.findTopScorersByLeagueSlug(slug);
   },
+  async getLeagueCards(slug: string, type: string) {
+    return leaguesQueries.findCardsByLeagueSlug(slug, type);
+  },
 };

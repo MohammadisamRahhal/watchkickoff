@@ -153,4 +153,40 @@ export const leaguesQueries = {
       teamId: r.team_id, teamName: r.team_name, teamCrest: r.team_crest, teamSlug: r.team_slug,
     }));
   },
+  async findCardsByLeagueSlug(slug: string, type: string) {
+    const { rows } = await db.execute(sql`
+      SELECT
+        p.id AS player_id, p.name AS player_name, p.slug AS player_slug,
+        t.id AS team_id, t.name AS team_name, t.crest_url AS team_crest, t.slug AS team_slug,
+        COUNT(CASE WHEN me.event_type = 'YELLOW' THEN 1 END)::int AS yellow_cards,
+        COUNT(CASE WHEN me.event_type IN ('RED','SECOND_YELLOW') THEN 1 END)::int AS red_cards,
+        MAX(ss.appearances) AS appearances,
+        MAX(ss.minutes_played) AS minutes_played
+      FROM match_events me
+      JOIN matches m ON m.id = me.match_id
+      JOIN leagues l ON l.id = m.league_id
+      JOIN players p ON p.id = me.player_id
+      JOIN teams t ON t.id = me.team_id
+      LEFT JOIN season_stats ss ON ss.player_id = p.id AND ss.league_id = l.id
+      WHERE (l.slug = ${slug}
+         OR l.slug ~ ('^' || ${slug} || '-[0-9]{4}-[0-9]{4}$')
+         OR l.slug ~ ('^' || ${slug} || '-[a-z]{2,3}-[0-9]{4}-[0-9]{4}$'))
+        AND me.event_type IN ('YELLOW','RED','SECOND_YELLOW')
+        AND m.status = 'FINISHED'
+      GROUP BY p.id, p.name, p.slug, t.id, t.name, t.crest_url, t.slug
+      ORDER BY
+        CASE WHEN ${type} = 'red'
+          THEN COUNT(CASE WHEN me.event_type IN ('RED','SECOND_YELLOW') THEN 1 END)
+          ELSE COUNT(CASE WHEN me.event_type = 'YELLOW' THEN 1 END)
+        END DESC
+      LIMIT 30
+    `);
+    return (rows as any[]).map(r => ({
+      playerId: r.player_id, playerName: r.player_name, playerSlug: r.player_slug,
+      teamId: r.team_id, teamName: r.team_name, teamCrest: r.team_crest, teamSlug: r.team_slug,
+      yellowCards: Number(r.yellow_cards ?? 0), redCards: Number(r.red_cards ?? 0),
+      appearances: r.appearances ? Number(r.appearances) : null,
+      minutesPlayed: r.minutes_played ? Number(r.minutes_played) : null,
+    }));
+  },
 };
