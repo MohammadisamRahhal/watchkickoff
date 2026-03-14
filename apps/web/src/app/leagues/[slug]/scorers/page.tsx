@@ -15,8 +15,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const l = await getLeagueBySlug(slug);
     const yr = Number(l.season ?? 2025);
-    return { title: `${l.name} ${yr}/${yr+1} Stats · WatchKickoff` };
-  } catch { return { title: 'Stats · WatchKickoff' }; }
+    return { title: `${l.name} ${yr}/${yr+1} Top Scorers` };
+  } catch { return { title: 'Stats' }; }
 }
 
 export default async function ScorersPage({ params, searchParams }: Props) {

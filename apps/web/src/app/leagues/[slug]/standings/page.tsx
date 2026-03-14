@@ -14,8 +14,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const l = await getLeagueBySlug(slug);
     const yr = Number(l.season ?? 2025);
-    return { title: `${l.name} ${yr}/${yr+1} Standings · WatchKickoff` };
-  } catch { return { title: 'Standings · WatchKickoff' }; }
+    return { title: `${l.name} ${yr}/${yr+1} Standings` };
+  } catch { return { title: 'Standings' }; }
 }
 
 function calcSplit(matches: any[], standings: any[]) {
