@@ -51,12 +51,7 @@ async function SiteHeader() {
             </a>
           ))}
         </nav>
-        <div className="header-right">
-          <a href="/live" className="header-live">
-            <span className="live-dot" style={{ width: 7, height: 7, flexShrink: 0 }} />
-            LIVE
-          </a>
-        </div>
+
       </div>
     </header>
   );
