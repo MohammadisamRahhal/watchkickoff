@@ -221,7 +221,6 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 
 /* ── Responsive table columns ── */
 @media(max-width:640px){
-  .resp-hide { display:none !important }
   .standings-table { min-width:0 !important; font-size:12px }
   .standings-table th,.standings-table td { padding:8px 4px !important }
 }
@@ -230,7 +229,6 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 @media(max-width:600px){
   .footer-grid{grid-template-columns:1fr;gap:24px;padding:28px 16px}
   .leagues-page{padding:16px 10px 60px}
-  .resp-hide{display:none !important}
   .match-row{grid-template-columns:1fr 80px 1fr;padding:8px 10px}
   .match-row__team-name{font-size:12px}
   .match-row__score{font-size:18px}
