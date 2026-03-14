@@ -5,7 +5,7 @@ import MatchClientPage from './MatchClientPage';
 async function getMatch(slug: string) {
   try {
     const res = await fetch(`http://localhost:3001/api/v1/matches/${slug}`, {
-      next: { revalidate: 30 },
+      cache: 'no-store',
     });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error('Failed');
