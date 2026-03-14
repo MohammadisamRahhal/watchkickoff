@@ -1,6 +1,7 @@
 'use client';
+import Link from 'next/link';
 
-type Ev = { id: string; eventType: string; minute: number; minuteExtra?: number; teamId: string; playerName?: string; assistPlayerName?: string; };
+type Ev = { id: string; eventType: string; minute: number; minuteExtra?: number; teamId: string; playerName?: string; playerSlug?: string; assistPlayerName?: string; };
 
 const ICONS: Record<string,string> = { GOAL:'⚽', OWN_GOAL:'⚽', PENALTY_SCORED:'⚽', PENALTY_MISSED:'✖️', YELLOW:'🟨', SECOND_YELLOW:'🟨🟥', RED:'🟥', SUB_IN:'🔄', SUB_OUT:'🔄', VAR:'📺' };
 const LABELS: Record<string,string> = { GOAL:'Goal', OWN_GOAL:'Own Goal', PENALTY_SCORED:'Penalty', PENALTY_MISSED:'Pen. Missed', YELLOW:'Yellow Card', SECOND_YELLOW:'2nd Yellow', RED:'Red Card', SUB_IN:'Sub', SUB_OUT:'Sub', VAR:'VAR' };
@@ -53,7 +54,7 @@ export default function EventsTimeline({ events, homeTeamId, homeTeamName, awayT
             <div style={S.contentRight}>
               <div style={{...S.nameRow, flexDirection:'row-reverse'}}>
                 <span style={S.icon}>{icon}</span>
-                <span style={S.name}>{ev.playerName || '—'}</span>
+                (ev.playerSlug ? <Link href={`/players/${ev.playerSlug}`} style={{...S.name, textDecoration:'none', color:'var(--text,#0f1923)'}}>{ev.playerName||'—'}</Link> : <span style={S.name}>{ev.playerName||'—'}</span>)
               </div>
               {ev.assistPlayerName && <div style={S.assist}>↳ {ev.assistPlayerName}</div>}
               <div style={S.lbl}>{label}</div>
@@ -72,7 +73,7 @@ export default function EventsTimeline({ events, homeTeamId, homeTeamName, awayT
             <div style={S.contentLeft}>
               <div style={S.nameRow}>
                 <span style={S.icon}>{icon}</span>
-                <span style={S.name}>{ev.playerName || '—'}</span>
+                (ev.playerSlug ? <Link href={`/players/${ev.playerSlug}`} style={{...S.name, textDecoration:'none', color:'var(--text,#0f1923)'}}>{ev.playerName||'—'}</Link> : <span style={S.name}>{ev.playerName||'—'}</span>)
               </div>
               {ev.assistPlayerName && <div style={S.assist}>↳ {ev.assistPlayerName}</div>}
               <div style={S.lbl}>{label}</div>
