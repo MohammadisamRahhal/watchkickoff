@@ -98,7 +98,7 @@ async function syncLiveMatches(): Promise<void> {
     SELECT id, provider_ref->>'apiFootball' as ext_id
     FROM matches
     WHERE status = 'FINISHED'
-    AND kickoff_at > NOW() - INTERVAL '2 hours'
+    AND kickoff_at > NOW() - INTERVAL '24 hours'
     AND NOT EXISTS (SELECT 1 FROM match_events WHERE match_id = matches.id)
     LIMIT 10
   `);
@@ -132,7 +132,7 @@ async function syncLiveMatches(): Promise<void> {
     FROM matches m
     JOIN leagues l ON l.id = m.league_id
     WHERE m.status = 'FINISHED'
-    AND m.kickoff_at > NOW() - INTERVAL '2 hours'
+    AND m.kickoff_at > NOW() - INTERVAL '24 hours'
     AND NOT EXISTS (SELECT 1 FROM match_lineups WHERE match_id = m.id)
     LIMIT 5
   `);
