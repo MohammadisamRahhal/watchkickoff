@@ -9,13 +9,12 @@ import TeamStats from './TeamStats';
 import TeamTransfers from './TeamTransfers';
 
 const TABS = [
-  { id: 'overview',  label: 'Overview' },
-  { id: 'fixtures',  label: 'Fixtures' },
-  { id: 'results',   label: 'Results' },
-  { id: 'squad',     label: 'Squad' },
-  { id: 'standings', label: 'Standings' },
-  { id: 'stats',     label: 'Stats' },
-  { id: 'transfers', label: 'Transfers' },
+  { id: 'overview',   label: 'Overview' },
+  { id: 'fixtures',   label: 'Fixtures' },
+  { id: 'table',      label: 'Table' },
+  { id: 'squad',      label: 'Squad' },
+  { id: 'stats',      label: 'Stats' },
+  { id: 'transfers',  label: 'Transfers' },
 ];
 
 interface Props {
@@ -24,34 +23,48 @@ interface Props {
   standings: any; stats: any; transfers: any[];
 }
 
-export default function TeamClientPage({ slug, activeTab, overview, fixtures, results, squad, standings, stats, transfers }: Props) {
-  const [tab, setTab] = useState(activeTab);
+export default function TeamClientPage({
+  slug, activeTab, overview, fixtures, results, squad, standings, stats, transfers,
+}: Props) {
+  const [tab, setTab] = useState(() => {
+    if (activeTab === 'standings') return 'table';
+    if (activeTab === 'results') return 'fixtures';
+    return activeTab;
+  });
   const team = overview?.team;
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      {/* Breadcrumb - separate from hero */}
-      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '10px 16px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '8px 16px' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <nav style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <a href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</a>
+            <span>›</span>
+            <a href="/leagues" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Teams</a>
             <span>›</span>
             <span style={{ color: 'var(--text)' }}>{team?.name}</span>
           </nav>
         </div>
       </div>
-      <TeamHero team={team} stats={overview?.stats} form={overview?.form} teamId={team?.id} />
 
-      {/* Tabs */}
-      <div style={{ background: 'var(--bg-card)', borderBottom: '2px solid var(--border)', position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', overflowX: 'auto', scrollbarWidth: 'none' }}>
+      <TeamHero
+        team={team}
+        stats={overview?.stats}
+        form={overview?.form}
+        teamId={team?.id}
+        nextMatch={overview?.nextMatch}
+        standings={standings}
+      />
+
+      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ maxWidth: 960, margin: '0 auto', display: 'flex', overflowX: 'auto', scrollbarWidth: 'none' }}>
           {TABS.map(t => (
             <button key={t.id}
               onClick={() => { setTab(t.id); window.history.replaceState(null, '', `?tab=${t.id}`); }}
               style={{
-                padding: '12px 18px', border: 'none',
+                padding: '13px 20px', border: 'none',
                 borderBottom: tab === t.id ? '2px solid var(--blue)' : '2px solid transparent',
-                marginBottom: -2, background: 'transparent',
+                marginBottom: -1, background: 'transparent',
                 color: tab === t.id ? 'var(--blue)' : 'var(--text-muted)',
                 fontWeight: tab === t.id ? 700 : 500, fontSize: 13,
                 cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'var(--font-body)',
@@ -61,13 +74,11 @@ export default function TeamClientPage({ slug, activeTab, overview, fixtures, re
         </div>
       </div>
 
-      {/* Content */}
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 16px 60px' }}>
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: '20px 16px 80px' }}>
         {tab === 'overview'  && <TeamOverview overview={overview} teamId={team?.id} />}
-        {tab === 'fixtures'  && <TeamFixtures matches={fixtures} teamId={team?.id} type="fixtures" />}
-        {tab === 'results'   && <TeamFixtures matches={results} teamId={team?.id} type="results" />}
+        {tab === 'fixtures'  && <TeamFixtures fixtures={fixtures} results={results} teamId={team?.id} teamSlug={slug} />}
+        {tab === 'table'     && <TeamStandings standings={standings} teamId={team?.id} teamSlug={slug} />}
         {tab === 'squad'     && <TeamSquad squad={squad} coach={team?.coach_name ? { name: team.coach_name, photo: team.coach_photo } : undefined} />}
-        {tab === 'standings' && <TeamStandings standings={standings} teamId={team?.id} teamSlug={slug} />}
         {tab === 'stats'     && <TeamStats stats={stats} teamSlug={slug} />}
         {tab === 'transfers' && <TeamTransfers transfers={transfers} teamId={team?.id} />}
       </div>
