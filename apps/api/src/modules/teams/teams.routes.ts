@@ -63,6 +63,18 @@ export async function registerTeamsRoutes(app: FastifyInstance) {
     return { data: stats };
   });
 
+  app.get('/coach/:name', async (req, reply) => {
+    const { name } = req.params as { name: string };
+    const { db } = await import('@infrastructure/database/client.js');
+    const { sql } = await import('drizzle-orm');
+    const result = await db.execute(sql`
+      SELECT id, name, slug, crest_url, coach_name, coach_photo, country_code
+      FROM teams WHERE coach_name ILIKE ${name} LIMIT 1
+    `);
+    if (!result.rows[0]) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Coach not found' } });
+    return { data: result.rows[0] };
+  });
+
   app.get('/:slug/transfers', async (req, reply) => {
     const { slug } = req.params as { slug: string };
     const team = await getTeamBySlug(slug);

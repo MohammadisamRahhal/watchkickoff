@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function StatBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
@@ -16,18 +16,29 @@ function StatBar({ label, value, max, color }: { label: string; value: number; m
   );
 }
 
-const SEASONS = [
-  { key: '2025', label: '25/26' },
-  { key: '2024', label: '24/25' },
-  { key: '2023', label: '23/24' },
-  { key: '2022', label: '22/23' },
-  { key: '2021', label: '21/22' },
-];
+function seasonLabel(s: string): string {
+  const y = parseInt(s);
+  return `${String(y).slice(2)}/${String(y+1).slice(2)}`;
+}
+
+// All seasons we have data for
+const ALL_SEASONS = ['2025','2024','2023','2022','2021','2020','2019','2018','2017','2016','2015'];
 
 export default function TeamStats({ stats, teamSlug }: { stats: any; teamSlug?: string }) {
   const [season, setSeason] = useState('2025');
   const [data, setData] = useState<any>(stats);
   const [loading, setLoading] = useState(false);
+  const [availableSeasons, setAvailableSeasons] = useState<string[]>(['2025']);
+
+  useEffect(() => {
+    // Find which seasons have data by checking matches count
+    if (teamSlug) {
+      fetch(`/api/v1/teams/${teamSlug}/seasons`)
+        .then(r => r.json())
+        .then(j => { if (j.data?.length) setAvailableSeasons(j.data); })
+        .catch(() => setAvailableSeasons(ALL_SEASONS));
+    }
+  }, [teamSlug]);
 
   async function loadSeason(s: string) {
     if (s === season) return;
@@ -55,31 +66,31 @@ export default function TeamStats({ stats, teamSlug }: { stats: any; teamSlug?: 
   const ap = Number(d?.away_played ?? 0);
   const aw = Number(d?.away_wins ?? 0);
   const wr = played > 0 ? Math.round((wins / played) * 100) : 0;
-  const sl = SEASONS.find(s => s.key === season)?.label ?? season;
 
   return (
     <div>
-      {/* Season tabs */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
-        {SEASONS.map(s => (
-          <button key={s.key} onClick={() => loadSeason(s.key)} style={{
+      {/* Season tabs - scrollable */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+        {ALL_SEASONS.map(s => (
+          <button key={s} onClick={() => loadSeason(s)} style={{
             padding: '6px 14px', borderRadius: 20, border: '1px solid var(--border)',
-            background: season === s.key ? 'var(--blue)' : 'var(--bg-card)',
-            color: season === s.key ? '#fff' : 'var(--text-muted)',
-            fontWeight: season === s.key ? 700 : 400, fontSize: 13, cursor: 'pointer',
-          }}>{s.label}</button>
+            background: season === s ? 'var(--blue)' : 'var(--bg-card)',
+            color: season === s ? '#fff' : 'var(--text-muted)',
+            fontWeight: season === s ? 700 : 400, fontSize: 13, cursor: 'pointer',
+            whiteSpace: 'nowrap', flexShrink: 0,
+          }}>{seasonLabel(s)}</button>
         ))}
       </div>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading...</div>
       ) : !d || played === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No data for {sl}</div>
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No data for {seasonLabel(season)}</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <div style={{ background: 'var(--bg-card)', borderRadius: 10, padding: 18, border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Season {sl}</h3>
+              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Season {seasonLabel(season)}</h3>
               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--blue)', background: 'rgba(29,78,216,0.08)', padding: '2px 10px', borderRadius: 20 }}>{played} matches</span>
             </div>
             <StatBar label="Wins" value={wins} max={played} color="#22c55e" />
@@ -108,20 +119,11 @@ export default function TeamStats({ stats, teamSlug }: { stats: any; teamSlug?: 
               ))}
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Per game: <strong style={{ color: 'var(--text)' }}>{played > 0 ? (gf/played).toFixed(1) : '0.0'}</strong> scored / <strong style={{ color: 'var(--text)' }}>{played > 0 ? (ga/played).toFixed(1) : '0.0'}</strong> conceded</div>
-          </div>
-
-          <div style={{ background: 'var(--bg-card)', borderRadius: 10, padding: 18, border: '1px solid var(--border)', gridColumn: 'span 2' }}>
-            <h3 style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Home vs Away</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              {[{label:'🏠 Home',p:hp,w:hw},{label:'✈️ Away',p:ap,w:aw}].map(({label,p,w}) => (
-                <div key={label} style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: 14, textAlign: 'center', border: '1px solid var(--border)' }}>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>{label}</div>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: 16 }}>
-                    <div><div style={{ fontSize: 20, fontWeight: 800, color: '#22c55e' }}>{w}</div><div style={{ fontSize: 10, color: 'var(--text-muted)' }}>W</div></div>
-                    <div><div style={{ fontSize: 20, fontWeight: 800, color: '#f59e0b' }}>{p-w>0?p-w:0}</div><div style={{ fontSize: 10, color: 'var(--text-muted)' }}>D+L</div></div>
-                    <div><div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>{p}</div><div style={{ fontSize: 10, color: 'var(--text-muted)' }}>GP</div></div>
-                  </div>
-                  <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>Win rate: <strong style={{ color: '#22c55e' }}>{p > 0 ? Math.round((w/p)*100) : 0}%</strong></div>
+            <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {[{l:'Home Played',v:hp},{l:'Home Wins',v:hw},{l:'Away Played',v:ap},{l:'Away Wins',v:aw}].map(s=>(
+                <div key={s.l} style={{ background: 'var(--bg-elevated)', borderRadius: 8, padding: '8px 10px', border: '1px solid var(--border)', textAlign: 'center' }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)' }}>{s.v}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{s.l}</div>
                 </div>
               ))}
             </div>
