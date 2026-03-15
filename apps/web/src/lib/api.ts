@@ -112,24 +112,6 @@ export async function getStandings(leagueSlug: string): Promise<StandingRow[]> {
   });
 }
 
-// ── Teams ─────────────────────────────────────────────────────
-
-export async function getTeamBySlug(slug: string) {
-  return apiFetch<any>(`/teams/${slug}`, { next: { revalidate: 900 } });
-}
-
-export async function getTeamMatches(slug: string) {
-  return apiFetch<any[]>(`/teams/${slug}/matches`, { next: { revalidate: 300 } });
-}
-
-export async function getTeamStandings(slug: string) {
-  return apiFetch<any[]>(`/teams/${slug}/standings`, { next: { revalidate: 300 } });
-}
-
-export async function getTeamSquad(slug: string) {
-  return apiFetch<any[]>(`/teams/${slug}/squad`, { next: { revalidate: 900 } });
-}
-
 // ── Players ───────────────────────────────────────────────────
 
 export async function getPlayerBySlug(slug: string) {
@@ -168,4 +150,38 @@ export async function getLeagueSeasons(slug: string): Promise<{ season: string; 
 
 export async function getLeagueCards(slug: string, type: string = 'yellow') {
   return apiFetch<any[]>(`/leagues/${slug}/cards?type=${type}`, { next: { revalidate: 3600 } });
+}
+
+// ── Teams ────────────────────────────────────────────────────────
+export async function getTeamBySlug(slug: string): Promise<any> {
+  const res = await apiFetch<{ data: any }>(`/teams/${slug}`, { next: { revalidate: 300 } });
+  return res.data;
+}
+export async function getTeamOverview(slug: string): Promise<any> {
+  const res = await apiFetch<{ data: any }>(`/teams/${slug}/overview`, { next: { revalidate: 60 } });
+  return res.data;
+}
+export async function getTeamFixtures(slug: string): Promise<any[]> {
+  const res = await apiFetch<{ data: any[] }>(`/teams/${slug}/fixtures`, { next: { revalidate: 60 } });
+  return res.data ?? [];
+}
+export async function getTeamResults(slug: string): Promise<any[]> {
+  const res = await apiFetch<{ data: any[] }>(`/teams/${slug}/results`, { next: { revalidate: 60 } });
+  return res.data ?? [];
+}
+export async function getTeamSquad(slug: string): Promise<any[]> {
+  const res = await apiFetch<{ data: any[] }>(`/teams/${slug}/squad`, { next: { revalidate: 300 } });
+  return res.data ?? [];
+}
+export async function getTeamStandings(slug: string): Promise<any> {
+  const res = await apiFetch<{ data: any }>(`/teams/${slug}/standings`, { next: { revalidate: 120 } });
+  return res.data;
+}
+export async function getTeamStats(slug: string): Promise<any> {
+  const res = await apiFetch<{ data: any }>(`/teams/${slug}/stats`, { next: { revalidate: 120 } });
+  return res.data;
+}
+export async function getTeamTransfers(slug: string): Promise<any[]> {
+  const res = await apiFetch<{ data: any[] }>(`/teams/${slug}/transfers`, { next: { revalidate: 300 } });
+  return res.data ?? [];
 }

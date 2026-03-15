@@ -1,69 +1,235 @@
 import { db } from '@infrastructure/database/client.js';
-import { teams, matches, standings, leagues, seasonStats, players } from '@infrastructure/database/schema.js';
-import { eq, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { createLogger } from '@core/logger.js';
 
 const logger = createLogger('teams-queries');
 
-export const teamsQueries = {
-  _logger: logger,
+export async function findTeamBySlug(slug: string) {
+  const result = await db.execute(sql`
+    SELECT t.id, t.name, t.slug, t.short_name, t.crest_url,
+           t.country_code, t.founded_year, t.stadium_name, t.provider_ref
+    FROM teams t
+    WHERE t.slug = ${slug}
+    LIMIT 1
+  `);
+  return result.rows[0] ?? null;
+}
 
-  async findBySlug(slug: string) {
-    const rows = await db.select().from(teams).where(eq(teams.slug, slug)).limit(1);
-    return rows[0] ?? null;
-  },
+export async function findTeamOverview(teamId: string) {
+  const stats = await db.execute(sql`
+    SELECT
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED') AS played,
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND (
+        (m.home_team_id = ${teamId} AND m.home_score > m.away_score) OR
+        (m.away_team_id = ${teamId} AND m.away_score > m.home_score)
+      )) AS wins,
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND m.home_score = m.away_score) AS draws,
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND (
+        (m.home_team_id = ${teamId} AND m.home_score < m.away_score) OR
+        (m.away_team_id = ${teamId} AND m.away_score < m.home_score)
+      )) AS losses,
+      COALESCE(SUM(CASE WHEN m.home_team_id = ${teamId} THEN m.home_score ELSE m.away_score END) FILTER (WHERE m.status = 'FINISHED'), 0) AS goals_for,
+      COALESCE(SUM(CASE WHEN m.home_team_id = ${teamId} THEN m.away_score ELSE m.home_score END) FILTER (WHERE m.status = 'FINISHED'), 0) AS goals_against
+    FROM matches m
+    WHERE (m.home_team_id = ${teamId} OR m.away_team_id = ${teamId})
+      AND m.season = '2025'
+  `);
 
-  async findMatchesByTeamId(teamId: string) {
-    const { rows } = await db.execute(sql`
-      SELECT
-        m.id, m.slug, m.status, m.minute, m.kickoff_at,
-        m.home_score, m.away_score, m.home_score_ht, m.away_score_ht,
-        m.season, m.round, m.venue, m.raw_status,
-        m.home_team_id, m.away_team_id, m.league_id,
-        ht.id AS ht_id, ht.name AS ht_name, ht.crest_url AS ht_crest, ht.slug AS ht_slug,
-        at.id AS at_id, at.name AS at_name, at.crest_url AS at_crest, at.slug AS at_slug,
-        l.id  AS l_id,  l.name  AS l_name,  l.country_code AS l_country, l.slug AS l_slug
-      FROM matches m
-      JOIN teams ht  ON ht.id = m.home_team_id
-      JOIN teams at  ON at.id = m.away_team_id
-      JOIN leagues l ON l.id  = m.league_id
-      WHERE m.home_team_id = ${teamId} OR m.away_team_id = ${teamId}
-      ORDER BY m.kickoff_at DESC
-      LIMIT 50
-    `);
-    return (rows as any[]).map(r => ({
-      id: r.id, slug: r.slug, status: r.status, minute: r.minute,
-      kickoffAt: r.kickoff_at, season: r.season, round: r.round, venue: r.venue,
-      homeTeamId: r.home_team_id, awayTeamId: r.away_team_id, leagueId: r.league_id,
-      score: { home: r.home_score, away: r.away_score, homeHt: r.home_score_ht, awayHt: r.away_score_ht },
-      homeTeam: { id: r.ht_id, name: r.ht_name, crestUrl: r.ht_crest, slug: r.ht_slug },
-      awayTeam: { id: r.at_id, name: r.at_name, crestUrl: r.at_crest, slug: r.at_slug },
-      league:   { id: r.l_id,  name: r.l_name,  countryCode: r.l_country, slug: r.l_slug },
-    }));
-  },
+  const form = await db.execute(sql`
+    SELECT
+      m.id, m.slug, m.home_score, m.away_score, m.status, m.kickoff_at,
+      m.home_team_id, m.away_team_id,
+      ht.name AS home_name, ht.crest_url AS home_crest, ht.slug AS home_slug,
+      at.name AS away_name, at.crest_url AS away_crest, at.slug AS away_slug,
+      l.name AS league_name, l.slug AS league_slug
+    FROM matches m
+    JOIN teams ht ON ht.id = m.home_team_id
+    JOIN teams at ON at.id = m.away_team_id
+    JOIN leagues l ON l.id = m.league_id
+    WHERE (m.home_team_id = ${teamId} OR m.away_team_id = ${teamId})
+      AND m.status = 'FINISHED'
+      AND m.season = '2025'
+    ORDER BY m.kickoff_at DESC
+    LIMIT 5
+  `);
 
-  async findStandingByTeamId(teamId: string) {
-    const { rows } = await db.execute(sql`
-      SELECT s.*, l.name AS league_name, l.slug AS league_slug, l.country_code
-      FROM standings s
-      JOIN leagues l ON l.id = s.league_id
-      WHERE s.team_id = ${teamId}
-      ORDER BY s.updated_at DESC
-      LIMIT 5
-    `);
-    return rows as any[];
-  },
+  const next = await db.execute(sql`
+    SELECT
+      m.id, m.slug, m.kickoff_at, m.status, m.round,
+      m.home_team_id, m.away_team_id,
+      ht.name AS home_name, ht.crest_url AS home_crest, ht.slug AS home_slug,
+      at.name AS away_name, at.crest_url AS away_crest, at.slug AS away_slug,
+      l.name AS league_name, l.slug AS league_slug
+    FROM matches m
+    JOIN teams ht ON ht.id = m.home_team_id
+    JOIN teams at ON at.id = m.away_team_id
+    JOIN leagues l ON l.id = m.league_id
+    WHERE (m.home_team_id = ${teamId} OR m.away_team_id = ${teamId})
+      AND m.status IN ('SCHEDULED','PRE_MATCH')
+      AND m.season = '2025'
+    ORDER BY m.kickoff_at ASC
+    LIMIT 1
+  `);
 
-  async findSquadByTeamId(teamId: string) {
-    const { rows } = await db.execute(sql`
-      SELECT p.id, p.name, p.slug, p.position, p.nationality_code, p.date_of_birth,
-             p.height_cm, p.preferred_foot,
-             ss.goals, ss.assists, ss.appearances, ss.yellow_cards, ss.red_cards, ss.rating
-      FROM players p
-      LEFT JOIN season_stats ss ON ss.player_id = p.id AND ss.team_id = ${teamId}
-      WHERE p.current_team_id = ${teamId}
-      ORDER BY p.position ASC, p.name ASC
-    `);
-    return rows as any[];
-  },
-};
+  const topScorers = await db.execute(sql`
+    SELECT
+      p.id, p.name, p.slug, p.position, p.nationality_code,
+      ss.goals, ss.assists, ss.appearances
+    FROM season_stats ss
+    JOIN players p ON p.id = ss.player_id
+    WHERE ss.team_id = ${teamId}
+      AND ss.season = '2025'
+      AND ss.goals > 0
+    ORDER BY ss.goals DESC
+    LIMIT 5
+  `);
+
+  return {
+    stats: stats.rows[0] ?? {},
+    form: form.rows,
+    nextMatch: next.rows[0] ?? null,
+    topScorers: topScorers.rows,
+  };
+}
+
+export async function findTeamFixtures(teamId: string, type: 'upcoming' | 'results') {
+  const result = await db.execute(
+    type === 'upcoming'
+      ? sql`
+        SELECT
+          m.id, m.slug, m.home_score, m.away_score, m.status,
+          m.kickoff_at, m.round, m.season,
+          m.home_team_id, m.away_team_id,
+          ht.name AS home_name, ht.slug AS home_slug, ht.crest_url AS home_crest,
+          at.name AS away_name, at.slug AS away_slug, at.crest_url AS away_crest,
+          l.name AS league_name, l.slug AS league_slug, l.country_code
+        FROM matches m
+        JOIN teams ht ON ht.id = m.home_team_id
+        JOIN teams at ON at.id = m.away_team_id
+        JOIN leagues l ON l.id = m.league_id
+        WHERE (m.home_team_id = ${teamId} OR m.away_team_id = ${teamId})
+          AND m.season = '2025'
+          AND m.status IN ('SCHEDULED','PRE_MATCH')
+        ORDER BY m.kickoff_at ASC
+        LIMIT 50
+      `
+      : sql`
+        SELECT
+          m.id, m.slug, m.home_score, m.away_score, m.status,
+          m.kickoff_at, m.round, m.season,
+          m.home_team_id, m.away_team_id,
+          ht.name AS home_name, ht.slug AS home_slug, ht.crest_url AS home_crest,
+          at.name AS away_name, at.slug AS away_slug, at.crest_url AS away_crest,
+          l.name AS league_name, l.slug AS league_slug, l.country_code
+        FROM matches m
+        JOIN teams ht ON ht.id = m.home_team_id
+        JOIN teams at ON at.id = m.away_team_id
+        JOIN leagues l ON l.id = m.league_id
+        WHERE (m.home_team_id = ${teamId} OR m.away_team_id = ${teamId})
+          AND m.season = '2025'
+          AND m.status = 'FINISHED'
+        ORDER BY m.kickoff_at DESC
+        LIMIT 50
+      `
+  );
+  return result.rows;
+}
+
+export async function findTeamSquad(teamId: string) {
+  const result = await db.execute(sql`
+    SELECT
+      p.id, p.name, p.slug, p.position, p.nationality_code,
+      p.date_of_birth, p.height_cm, p.preferred_foot, p.status,
+      ss.goals, ss.assists, ss.appearances, ss.rating
+    FROM players p
+    LEFT JOIN season_stats ss ON ss.player_id = p.id
+      AND ss.team_id = ${teamId}
+      AND ss.season = '2025'
+    WHERE p.current_team_id = ${teamId}
+      AND p.status != 'INACTIVE'
+    ORDER BY
+      CASE p.position
+        WHEN 'GK' THEN 1 WHEN 'DEF' THEN 2 WHEN 'MID' THEN 3 WHEN 'FWD' THEN 4 ELSE 5
+      END, p.name ASC
+  `);
+  return result.rows;
+}
+
+export async function findTeamStandings(teamId: string) {
+  const leagueResult = await db.execute(sql`
+    SELECT DISTINCT l.id, l.name, l.slug, l.country_code
+    FROM matches m
+    JOIN leagues l ON l.id = m.league_id
+    WHERE (m.home_team_id = ${teamId} OR m.away_team_id = ${teamId})
+      AND m.season = '2025'
+      AND l.type = 'LEAGUE'
+    ORDER BY l.name ASC
+    LIMIT 1
+  `);
+
+  if (!leagueResult.rows[0]) return null;
+  const leagueId = (leagueResult.rows[0] as any).id;
+
+  const standings = await db.execute(sql`
+    SELECT
+      s.position, s.played, s.wins, s.draws, s.losses,
+      s.goals_for, s.goals_against, s.goal_diff, s.points,
+      s.form, s.zone, s.team_id,
+      t.name AS team_name, t.slug AS team_slug, t.crest_url
+    FROM standings s
+    JOIN teams t ON t.id = s.team_id
+    WHERE s.league_id = ${leagueId}
+      AND s.season = '2025'
+    ORDER BY s.position ASC
+  `);
+
+  return { league: leagueResult.rows[0], table: standings.rows };
+}
+
+export async function findTeamStats(teamId: string) {
+  const result = await db.execute(sql`
+    SELECT
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED') AS played,
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND (
+        (m.home_team_id = ${teamId} AND m.home_score > m.away_score) OR
+        (m.away_team_id = ${teamId} AND m.away_score > m.home_score)
+      )) AS wins,
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND m.home_score = m.away_score) AS draws,
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND (
+        (m.home_team_id = ${teamId} AND m.home_score < m.away_score) OR
+        (m.away_team_id = ${teamId} AND m.away_score < m.home_score)
+      )) AS losses,
+      COALESCE(SUM(CASE WHEN m.home_team_id = ${teamId} THEN m.home_score ELSE m.away_score END) FILTER (WHERE m.status = 'FINISHED'),0) AS goals_for,
+      COALESCE(SUM(CASE WHEN m.home_team_id = ${teamId} THEN m.away_score ELSE m.home_score END) FILTER (WHERE m.status = 'FINISHED'),0) AS goals_against,
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND (
+        (m.home_team_id = ${teamId} AND m.home_score = 0) OR
+        (m.away_team_id = ${teamId} AND m.away_score = 0)
+      )) AS clean_sheets,
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND m.home_team_id = ${teamId}) AS home_played,
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND m.home_team_id = ${teamId} AND m.home_score > m.away_score) AS home_wins,
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND m.away_team_id = ${teamId}) AS away_played,
+      COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND m.away_team_id = ${teamId} AND m.away_score > m.home_score) AS away_wins
+    FROM matches m
+    WHERE (m.home_team_id = ${teamId} OR m.away_team_id = ${teamId})
+      AND m.season = '2025'
+  `);
+  return result.rows[0] ?? {};
+}
+
+export async function findTeamTransfers(teamId: string) {
+  const result = await db.execute(sql`
+    SELECT
+      tr.id, tr.transfer_date, tr.fee_amount, tr.fee_currency, tr.fee_type,
+      p.id AS player_id, p.name AS player_name, p.slug AS player_slug, p.position,
+      ft.name AS from_team_name, ft.slug AS from_team_slug, ft.crest_url AS from_crest,
+      tt.name AS to_team_name, tt.slug AS to_team_slug, tt.crest_url AS to_crest
+    FROM transfers tr
+    JOIN players p ON p.id = tr.player_id
+    LEFT JOIN teams ft ON ft.id = tr.from_team_id
+    LEFT JOIN teams tt ON tt.id = tr.to_team_id
+    WHERE (tr.from_team_id = ${teamId} OR tr.to_team_id = ${teamId})
+    ORDER BY tr.transfer_date DESC
+    LIMIT 50
+  `);
+  return result.rows;
+}
