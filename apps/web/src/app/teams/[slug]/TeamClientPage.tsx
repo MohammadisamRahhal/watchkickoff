@@ -79,7 +79,7 @@ export default function TeamClientPage({
         {tab === 'fixtures'  && <TeamFixtures fixtures={fixtures} results={results} teamId={team?.id} teamSlug={slug} />}
         {tab === 'table'     && <TeamStandings standings={standings} teamId={team?.id} teamSlug={slug} />}
         {tab === 'squad'     && <TeamSquad squad={squad} coach={team?.coach_name ? { name: team.coach_name, photo: team.coach_photo } : undefined} />}
-        {tab === 'stats'     && <TeamStats stats={stats} teamSlug={slug} overview={overview} />}
+        {tab === 'stats'     && <TeamStats stats={stats} teamSlug={slug} overview={overview} standings={standings} />}
         {tab === 'transfers' && <TeamTransfers transfers={transfers} teamId={team?.id} />}
       </div>
     </div>
