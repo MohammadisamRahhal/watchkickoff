@@ -34,13 +34,6 @@ export default function TeamHero({ team, stats, form, teamId }: { team: any; sta
     <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '20px 16px 0' }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
 
-        {/* Breadcrumb */}
-        <nav style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <a href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</a>
-          <span>›</span>
-          <span style={{ color: 'var(--text)' }}>{team.name}</span>
-        </nav>
-
         {/* Top row: crest + name + stats — exactly like Sofascore */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
           {/* Crest */}

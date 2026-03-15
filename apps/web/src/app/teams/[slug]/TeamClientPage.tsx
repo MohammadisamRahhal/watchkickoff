@@ -30,6 +30,16 @@ export default function TeamClientPage({ slug, activeTab, overview, fixtures, re
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      {/* Breadcrumb - separate from hero */}
+      <div style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '10px 16px' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <nav style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <a href="/" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Home</a>
+            <span>›</span>
+            <span style={{ color: 'var(--text)' }}>{team?.name}</span>
+          </nav>
+        </div>
+      </div>
       <TeamHero team={team} stats={overview?.stats} form={overview?.form} teamId={team?.id} />
 
       {/* Tabs */}
