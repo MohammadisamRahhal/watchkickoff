@@ -57,7 +57,7 @@ export default function TeamClientPage({ slug, activeTab, overview, fixtures, re
         {tab === 'fixtures'  && <TeamFixtures matches={fixtures} teamId={team?.id} type="fixtures" />}
         {tab === 'results'   && <TeamFixtures matches={results} teamId={team?.id} type="results" />}
         {tab === 'squad'     && <TeamSquad squad={squad} coach={team?.coach_name ? { name: team.coach_name, photo: team.coach_photo } : undefined} />}
-        {tab === 'standings' && <TeamStandings standings={standings} teamId={team?.id} />}
+        {tab === 'standings' && <TeamStandings standings={standings} teamId={team?.id} teamSlug={slug} />}
         {tab === 'stats'     && <TeamStats stats={stats} teamSlug={slug} />}
         {tab === 'transfers' && <TeamTransfers transfers={transfers} teamId={team?.id} />}
       </div>

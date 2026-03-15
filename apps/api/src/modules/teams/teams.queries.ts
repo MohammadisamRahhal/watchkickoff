@@ -156,7 +156,7 @@ export async function findTeamSquad(teamId: string) {
   return result.rows;
 }
 
-export async function findTeamStandings(teamId: string) {
+export async function findTeamStandings(teamId: string, season: string = '2025') {
   const leagueResult = await db.execute(sql`
     SELECT DISTINCT l.id, l.name, l.slug, l.country_code,
       COUNT(s.id) AS standing_count,
@@ -195,7 +195,7 @@ export async function findTeamStandings(teamId: string) {
     FROM standings s
     JOIN teams t ON t.id = s.team_id
     WHERE s.league_id = ${leagueId}
-      AND s.season = '2025'
+      AND s.season = ${season}
     ORDER BY s.position ASC
   `);
 

@@ -47,9 +47,10 @@ export async function registerTeamsRoutes(app: FastifyInstance) {
 
   app.get('/:slug/standings', async (req, reply) => {
     const { slug } = req.params as { slug: string };
+    const { season = '2025' } = req.query as { season?: string };
     const team = await getTeamBySlug(slug);
     if (!team) return reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'Team not found' } });
-    const standings = await getTeamStandings((team as any).id);
+    const standings = await getTeamStandings((team as any).id, season);
     return { data: standings };
   });
 

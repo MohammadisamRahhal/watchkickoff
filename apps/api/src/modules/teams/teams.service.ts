@@ -18,8 +18,8 @@ export async function getTeamResults(teamId: string) {
 export async function getTeamSquad(teamId: string) {
   return findTeamSquad(teamId);
 }
-export async function getTeamStandings(teamId: string) {
-  return findTeamStandings(teamId);
+export async function getTeamStandings(teamId: string, season: string = '2025') {
+  return findTeamStandings(teamId, season);
 }
 export async function getTeamStats(teamId: string, season: string = '2025') {
   return findTeamStats(teamId, season);
