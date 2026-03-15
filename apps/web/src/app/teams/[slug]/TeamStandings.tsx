@@ -3,17 +3,15 @@ import { useState } from 'react';
 
 const ZONE_COLOR: Record<string, string> = { PROMOTION: '#22c55e', CHAMPIONSHIP: '#3b82f6', RELEGATION: '#ef4444', NONE: 'transparent' };
 const FC: Record<string, string> = { W: '#22c55e', D: '#f59e0b', L: '#ef4444' };
-const SEASON_OPTS = [
-  { key: '2025', label: '25/26' }, { key: '2024', label: '24/25' },
-  { key: '2023', label: '23/24' }, { key: '2022', label: '22/23' },
-  { key: '2021', label: '21/22' }, { key: '2020', label: '20/21' },
-  { key: '2019', label: '19/20' },
-];
+const ALL_SEASON_OPTS = [
+  '2025','2024','2023','2022','2021','2020','2019','2018','2017','2016','2015'
+].map(k => ({ key: k, label: `${k.slice(2)}/${String(Number(k)+1).slice(2)}` }));
 
 export default function TeamStandings({ standings, teamId, teamSlug }: { standings: any; teamId: string; teamSlug?: string }) {
   const [season, setSeason] = useState('2025');
   const [data, setData] = useState<any>(standings);
   const [loading, setLoading] = useState(false);
+  const SEASON_OPTS = ALL_SEASON_OPTS;
 
   async function loadSeason(s: string) {
     if (s === season) return;
@@ -39,7 +37,7 @@ export default function TeamStandings({ standings, teamId, teamSlug }: { standin
         <div style={{ marginLeft: 'auto' }}>
           <select value={season} onChange={e => loadSeason(e.target.value)}
             style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 20, padding: '4px 12px', cursor: 'pointer' }}>
-            {SEASON_OPTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+            {ALL_SEASON_OPTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
           </select>
         </div>
       </div>
