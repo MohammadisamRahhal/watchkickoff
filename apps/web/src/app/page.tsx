@@ -30,13 +30,8 @@ const SLUG_PRIORITY: Record<string,number> = {
 };
 
 function getPriority(slug: string): number {
+  // EXACT match only — no partial matching to avoid wrong leagues
   if (SLUG_PRIORITY[slug] !== undefined) return SLUG_PRIORITY[slug];
-  // partial match for known bases
-  const bases = Object.keys(SLUG_PRIORITY);
-  for (const b of bases) {
-    const base = b.replace(/-\d{4}-\d{4}$|-\d{4}$/, '');
-    if (slug.startsWith(base + '-')) return SLUG_PRIORITY[b] + 0.5;
-  }
   return 999;
 }
 
