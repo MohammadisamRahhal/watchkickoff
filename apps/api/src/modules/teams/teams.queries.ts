@@ -7,7 +7,8 @@ const logger = createLogger('teams-queries');
 export async function findTeamBySlug(slug: string) {
   const result = await db.execute(sql`
     SELECT t.id, t.name, t.slug, t.short_name, t.crest_url,
-           t.country_code, t.founded_year, t.stadium_name, t.provider_ref
+           t.country_code, t.founded_year, t.stadium_name, t.provider_ref,
+           t.coach_name, t.coach_photo
     FROM teams t
     WHERE t.slug = ${slug}
     LIMIT 1
