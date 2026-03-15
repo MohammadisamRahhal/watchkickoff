@@ -4,7 +4,7 @@ const COUNTRY_NAMES: Record<string, string> = {
   GB: 'England', ES: 'Spain', DE: 'Germany', FR: 'France', IT: 'Italy',
   PT: 'Portugal', NL: 'Netherlands', BE: 'Belgium', AR: 'Argentina',
   BR: 'Brazil', SA: 'Saudi Arabia', US: 'United States', TR: 'Turkey',
-  RU: 'Russia', JP: 'Japan', MX: 'Mexico', CO: 'Colombia', NG: 'Nigeria',
+  RU: 'Russia', MX: 'Mexico', CO: 'Colombia', NG: 'Nigeria',
   EG: 'Egypt', MA: 'Morocco', SN: 'Senegal', GH: 'Ghana', CM: 'Cameroon',
   SC: 'Scotland', IE: 'Ireland', HR: 'Croatia', RS: 'Serbia', UA: 'Ukraine',
   PL: 'Poland', CZ: 'Czech Republic', RO: 'Romania', HU: 'Hungary',
