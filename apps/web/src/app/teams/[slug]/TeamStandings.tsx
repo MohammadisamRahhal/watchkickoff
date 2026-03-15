@@ -17,31 +17,24 @@ export default function TeamStandings({ standings, teamId }: { standings: any; t
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, padding: '12px 16px', background: 'var(--bg-card)', borderRadius: 10, border: '1px solid var(--border)' }}>
         <a href={`/leagues/${league.slug}/standings`} style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', textDecoration: 'none' }}>{league.name}</a>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 'auto', background: 'var(--bg-elevated)', padding: '3px 10px', borderRadius: 20, border: '1px solid var(--border)' }}>2025/26</span>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', marginLeft: 'auto', background: 'var(--bg-elevated)', padding: '3px 10px', borderRadius: 20, border: '1px solid var(--border)' }}>25/26</span>
       </div>
 
       <div style={{ background: 'var(--bg-card)', borderRadius: 10, border: '1px solid var(--border)', overflow: 'hidden' }}>
-        {/* Header */}
         <div style={{ display: 'grid', gridTemplateColumns: '40px 1fr 40px 40px 40px 40px 40px 40px 50px 90px', padding: '9px 16px', background: 'var(--bg-elevated)', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>
           <span>#</span><span>Club</span>
-          <span style={{textAlign:'center'}}>P</span>
-          <span style={{textAlign:'center'}}>W</span>
-          <span style={{textAlign:'center'}}>D</span>
-          <span style={{textAlign:'center'}}>L</span>
-          <span style={{textAlign:'center'}}>GF</span>
-          <span style={{textAlign:'center'}}>GA</span>
-          <span style={{textAlign:'center'}}>Pts</span>
-          <span style={{textAlign:'center'}}>Last 5</span>
+          <span style={{textAlign:'center'}}>P</span><span style={{textAlign:'center'}}>W</span>
+          <span style={{textAlign:'center'}}>D</span><span style={{textAlign:'center'}}>L</span>
+          <span style={{textAlign:'center'}}>GF</span><span style={{textAlign:'center'}}>GA</span>
+          <span style={{textAlign:'center'}}>Pts</span><span style={{textAlign:'center'}}>Last 5</span>
         </div>
 
         {table.map((row: any, i: number) => {
           const isTeam = row.team_id === teamId;
           const formArr = (row.form ?? '').split('').slice(-5);
-
           return (
             <div key={row.team_id} style={{
-              display: 'grid',
-              gridTemplateColumns: '40px 1fr 40px 40px 40px 40px 40px 40px 50px 90px',
+              display: 'grid', gridTemplateColumns: '40px 1fr 40px 40px 40px 40px 40px 40px 50px 90px',
               padding: '10px 16px',
               background: isTeam ? 'rgba(29,78,216,0.05)' : 'transparent',
               borderTop: i > 0 ? '1px solid var(--border-subtle)' : 'none',
@@ -49,19 +42,14 @@ export default function TeamStandings({ standings, teamId }: { standings: any; t
               alignItems: 'center',
             }}>
               <span style={{ fontSize: 13, fontWeight: isTeam ? 800 : 500, color: isTeam ? 'var(--blue)' : 'var(--text-muted)' }}>{row.position}</span>
-
               <a href={`/teams/${row.team_slug}`} style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', minWidth: 0 }}>
                 {row.crest_url && <img src={row.crest_url} style={{ width: 20, height: 20, objectFit: 'contain', flexShrink: 0 }} alt="" />}
                 <span style={{ fontSize: 13, fontWeight: isTeam ? 700 : 400, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.team_name}</span>
               </a>
-
               {[row.played, row.wins, row.draws, row.losses, row.goals_for, row.goals_against].map((v: any, j: number) => (
                 <span key={j} style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>{v ?? 0}</span>
               ))}
-
               <span style={{ textAlign: 'center', fontSize: 14, fontWeight: 800, color: isTeam ? 'var(--blue)' : 'var(--text)' }}>{row.points ?? 0}</span>
-
-              {/* Last 5 form */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
                 {formArr.length > 0
                   ? formArr.map((r: string, j: number) => (
@@ -75,7 +63,6 @@ export default function TeamStandings({ standings, teamId }: { standings: any; t
         })}
       </div>
 
-      {/* Legend */}
       <div style={{ display: 'flex', gap: 16, marginTop: 10, flexWrap: 'wrap' }}>
         {[['PROMOTION','#22c55e','UCL / Promotion'],['CHAMPIONSHIP','#3b82f6','Europa League'],['RELEGATION','#ef4444','Relegation']].map(([z,c,l]) => (
           <div key={z} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-muted)' }}>

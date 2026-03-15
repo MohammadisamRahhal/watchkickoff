@@ -9,7 +9,8 @@ const COUNTRY_NAMES: Record<string, string> = {
   SC: 'Scotland', IE: 'Ireland', HR: 'Croatia', RS: 'Serbia', UA: 'Ukraine',
   PL: 'Poland', CZ: 'Czech Republic', RO: 'Romania', HU: 'Hungary',
   GR: 'Greece', SE: 'Sweden', NO: 'Norway', DK: 'Denmark', FI: 'Finland',
-  CH: 'Switzerland', AT: 'Austria',
+  CH: 'Switzerland', AT: 'Austria', JP: 'Japan', KR: 'South Korea',
+  CN: 'China', AU: 'Australia', ZA: 'South Africa', TN: 'Tunisia',
 };
 
 function getResult(match: any, teamId: string): 'W' | 'D' | 'L' {
@@ -40,23 +41,22 @@ export default function TeamHero({ team, stats, form, teamId }: { team: any; sta
           <span style={{ color: 'var(--text)' }}>{team.name}</span>
         </nav>
 
-        {/* Main row — exactly like Sofascore */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+        {/* Top row: crest + name + stats — exactly like Sofascore */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
           {/* Crest */}
           {team.crest_url && (
-            <img src={team.crest_url} alt={team.name}
-              style={{ width: 72, height: 72, objectFit: 'contain', flexShrink: 0 }} />
+            <img src={team.crest_url} alt={team.name} style={{ width: 68, height: 68, objectFit: 'contain', flexShrink: 0 }} />
           )}
 
           {/* Name + meta */}
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--text)', margin: '0 0 6px', fontFamily: 'var(--font-display)', lineHeight: 1.1 }}>
               {team.name}
             </h1>
-            {/* Single meta line: flag + country + coach */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            {/* Meta: flag country | coach | stadium | est */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 0, flexWrap: 'wrap' }}>
               {flagCode && countryName && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text-muted)', marginRight: 14 }}>
                   <img src={`https://flagcdn.com/24x18/${flagCode}.png`} alt={countryName}
                     style={{ width: 18, height: 14, borderRadius: 2 }}
                     onError={(e: any) => e.target.style.display='none'} />
@@ -64,26 +64,24 @@ export default function TeamHero({ team, stats, form, teamId }: { team: any; sta
                 </div>
               )}
               {team.coach_name && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: 'var(--text-muted)' }}>
-                  <span>👔</span>
-                  <a href={`/coaches/${team.coach_name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')}`}
-                    style={{ color: 'var(--blue)', fontWeight: 600, textDecoration: 'none' }}>
-                    {team.coach_name}
-                  </a>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text-muted)', marginRight: 14 }}>
+                  {team.coach_photo && (
+                    <img src={team.coach_photo} alt={team.coach_name}
+                      style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover' }} />
+                  )}
+                  <span style={{ color: 'var(--blue)', fontWeight: 600 }}>{team.coach_name}</span>
                 </div>
               )}
               {team.stadium_name && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text-muted)' }}>
-                  <span>🏟</span><span>{team.stadium_name}</span>
-                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginRight: 14 }}>🏟 {team.stadium_name}</div>
               )}
               {team.founded_year && (
-                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Est. {team.founded_year}</span>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Est. {team.founded_year}</div>
               )}
             </div>
           </div>
 
-          {/* Season stats — right side */}
+          {/* Stats chips — right side */}
           {stats && (
             <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
               {[
@@ -103,10 +101,9 @@ export default function TeamHero({ team, stats, form, teamId }: { team: any; sta
           )}
         </div>
 
-        {/* Form strip */}
+        {/* Form strip — no "FORM" label, just circles like Sofascore */}
         {formReversed.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 14 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>FORM</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 12 }}>
             {formReversed.map((m: any, i: number) => {
               const isHome = m.home_team_id === teamId;
               const result = getResult(m, teamId);
