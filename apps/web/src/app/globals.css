@@ -314,8 +314,8 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 .mr{display:grid;grid-template-columns:1fr 96px 1fr;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border-subtle);text-decoration:none;color:var(--text);transition:background 0.1s;position:relative}
 .mr:last-child{border-bottom:none}
 .mr:hover{background:#f8f9fc}
-.mr-live{background:linear-gradient(to right,#fffbeb,#fff);border-left:3px solid #f59e0b}
-.mr-live:hover{background:linear-gradient(to right,#fef9e7,#f8f9fc)}
+.mr-live{background:#f0f6ff;border-left:3px solid #1d4ed8}
+.mr-live:hover{background:#e8f0fe}
 .mr-done{}
 
 .mr-team{display:flex;align-items:center;gap:8px}
@@ -368,7 +368,5 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
 }
 
 /* ── Homepage fixes ── */
-.mr-live{background:#f0f6ff !important}
-.mr-live:hover{background:#e8f0fe !important}
 .qlb{display:none}
 .hp-sb .sb-card .sb-league img,.hp-sb .sb-card .sbr img{width:20px;height:20px;object-fit:contain}
