@@ -157,13 +157,28 @@ export async function findTeamSquad(teamId: string) {
 
 export async function findTeamStandings(teamId: string) {
   const leagueResult = await db.execute(sql`
-    SELECT DISTINCT l.id, l.name, l.slug, l.country_code
+    SELECT DISTINCT l.id, l.name, l.slug, l.country_code,
+      COUNT(s.id) AS standing_count,
+      CASE
+        WHEN l.name ILIKE '%premier league%' AND l.country_code NOT IN ('WW') THEN 100
+        WHEN l.name ILIKE '%premier league%' THEN 90
+        WHEN l.name ILIKE '%la liga%' THEN 90
+        WHEN l.name ILIKE '%serie a%' THEN 90
+        WHEN l.name ILIKE '%bundesliga%' THEN 90
+        WHEN l.name ILIKE '%ligue 1%' THEN 90
+        WHEN l.name ILIKE '%pro league%' THEN 85
+        WHEN l.slug LIKE '%champions%' THEN 10
+        WHEN l.slug LIKE '%europa%' THEN 10
+        WHEN l.slug LIKE '%cup%' THEN 5
+        ELSE 50
+      END AS priority
     FROM matches m
     JOIN leagues l ON l.id = m.league_id
+    JOIN standings s ON s.league_id = l.id AND s.season = '2025'
     WHERE (m.home_team_id = ${teamId} OR m.away_team_id = ${teamId})
       AND m.season = '2025'
-      AND l.type = 'LEAGUE'
-    ORDER BY l.name ASC
+    GROUP BY l.id, l.name, l.slug, l.country_code
+    ORDER BY priority DESC, COUNT(s.id) DESC
     LIMIT 1
   `);
 
