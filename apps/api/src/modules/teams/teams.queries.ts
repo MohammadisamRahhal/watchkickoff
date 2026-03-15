@@ -202,7 +202,7 @@ export async function findTeamStandings(teamId: string) {
   return { league: leagueResult.rows[0], table: standings.rows };
 }
 
-export async function findTeamStats(teamId: string) {
+export async function findTeamStats(teamId: string, season: string = '2025') {
   const result = await db.execute(sql`
     SELECT
       COUNT(*) FILTER (WHERE m.status = 'FINISHED') AS played,
@@ -227,7 +227,7 @@ export async function findTeamStats(teamId: string) {
       COUNT(*) FILTER (WHERE m.status = 'FINISHED' AND m.away_team_id = ${teamId} AND m.away_score > m.home_score) AS away_wins
     FROM matches m
     WHERE (m.home_team_id = ${teamId} OR m.away_team_id = ${teamId})
-      AND m.season = '2025'
+      AND m.season = ${season}
   `);
   return result.rows[0] ?? {};
 }

@@ -21,8 +21,8 @@ export async function getTeamSquad(teamId: string) {
 export async function getTeamStandings(teamId: string) {
   return findTeamStandings(teamId);
 }
-export async function getTeamStats(teamId: string) {
-  return findTeamStats(teamId);
+export async function getTeamStats(teamId: string, season: string = '2025') {
+  return findTeamStats(teamId, season);
 }
 export async function getTeamTransfers(teamId: string) {
   return findTeamTransfers(teamId);
