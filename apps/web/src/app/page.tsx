@@ -9,25 +9,34 @@ export const metadata: Metadata = {
 };
 export const dynamic = 'force-dynamic';
 
-const TOP8: [string, number][] = [
-  ['uefa-champions-league-2025-', 0],
-  ['premier-league-2025-', 1],
-  ['la-liga-2025-', 2],
-  ['serie-a-2025-', 3],
-  ['bundesliga-2025-', 4],
-  ['ligue-1-2025-', 5],
-  ['europa-league-2025-', 6],
-  ['saudi-pro-league-2025-', 7],
-];
-const SEC: [string, number][] = [
-  ['fa-cup-', 10],['copa-del-rey-', 11],['primeira-liga-', 12],
-  ['eredivisie-', 13],['mls-', 14],['liga-mx-2', 15],
-  ['super-lig-', 16],['primeira-liga-', 17],
-];
+// Exact slug priority — ONLY these get top spots
+const SLUG_PRIORITY: Record<string,number> = {
+  'uefa-champions-league-2025-2026': 0,
+  'premier-league-2025-2026': 1,
+  'la-liga-2025-2026': 2,
+  'serie-a-2025-2026': 3,
+  'bundesliga-2025-2026': 4,
+  'ligue-1-2025-2026': 5,
+  'europa-league-2025-2026': 6,
+  'saudi-pro-league-2025-2026': 7,
+  'fa-cup-2025-2026': 8,
+  'copa-del-rey-2025-2026': 9,
+  'primeira-liga-2024-2025': 10,
+  'eredivisie-2024-2025': 11,
+  'liga-mx-2024-2025': 12,
+  'super-lig-2024-2025': 13,
+  'league-71-2026': 14,
+  'liga-profesional-argentina-2025-2026': 15,
+};
 
 function getPriority(slug: string): number {
-  for (const [p, n] of TOP8) if (slug.startsWith(p)) return n;
-  for (const [p, n] of SEC) if (slug.startsWith(p)) return n;
+  if (SLUG_PRIORITY[slug] !== undefined) return SLUG_PRIORITY[slug];
+  // partial match for known bases
+  const bases = Object.keys(SLUG_PRIORITY);
+  for (const b of bases) {
+    const base = b.replace(/-\d{4}-\d{4}$|-\d{4}$/, '');
+    if (slug.startsWith(base + '-')) return SLUG_PRIORITY[b] + 0.5;
+  }
   return 999;
 }
 
@@ -81,14 +90,14 @@ const FLAGS: Record<string,string> = {
 function cc2flag(cc: string) { return FLAGS[cc] ?? '🌍'; }
 
 const TOP_LEAGUES = [
-  {n:'UCL',s:'uefa-champions-league-2025-2026',f:'⭐'},
-  {n:'Premier',s:'premier-league-2025-2026',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'},
-  {n:'La Liga',s:'la-liga-2025-2026',f:'🇪🇸'},
-  {n:'Serie A',s:'serie-a-2025-2026',f:'🇮🇹'},
-  {n:'Bundesliga',s:'bundesliga-2025-2026',f:'🇩🇪'},
-  {n:'Ligue 1',s:'ligue-1-2025-2026',f:'🇫🇷'},
-  {n:'Europa',s:'europa-league-2025-2026',f:'🟠'},
-  {n:'Saudi PL',s:'saudi-pro-league-2025-2026',f:'🇸🇦'},
+  {n:'UCL',s:'uefa-champions-league-2025-2026',f:'⭐',logo:'https://media.api-sports.io/football/leagues/2.png'},
+  {n:'Premier',s:'premier-league-2025-2026',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',logo:'https://media.api-sports.io/football/leagues/39.png'},
+  {n:'La Liga',s:'la-liga-2025-2026',f:'🇪🇸',logo:'https://media.api-sports.io/football/leagues/140.png'},
+  {n:'Serie A',s:'serie-a-2025-2026',f:'🇮🇹',logo:'https://media.api-sports.io/football/leagues/135.png'},
+  {n:'Bundesliga',s:'bundesliga-2025-2026',f:'🇩🇪',logo:'https://media.api-sports.io/football/leagues/78.png'},
+  {n:'Ligue 1',s:'ligue-1-2025-2026',f:'🇫🇷',logo:'https://media.api-sports.io/football/leagues/61.png'},
+  {n:'Europa',s:'europa-league-2025-2026',f:'🟠',logo:'https://media.api-sports.io/football/leagues/3.png'},
+  {n:'Saudi PL',s:'saudi-pro-league-2025-2026',f:'🇸🇦',logo:'https://media.api-sports.io/football/leagues/307.png'},
 ];
 
 function MRow({ m }: { m: MatchSummary }) {
@@ -211,19 +220,7 @@ export default async function HomePage({ searchParams }: Props) {
         </div>
       </div>
 
-      <div className="qlb">
-        <div className="qlb-in">
-          <span className="qlb-lbl">LEAGUES</span>
-          {TOP_LEAGUES.map(l => (
-            <a key={l.s} href={`/leagues/${l.s}`} className="ql">
-              <span>{l.f}</span><span className="ql-n">{l.n}</span>
-            </a>
-          ))}
-          <a href="/leagues" className="ql ql-all">All →</a>
-        </div>
-      </div>
-
-      <div className="hp-body">
+            <div className="hp-body">
         <main className="hp-main">
           <div className="hp-hd">
             <h1 className="hp-title">{isToday ? 'Today' : displayDate}</h1>
@@ -253,7 +250,9 @@ export default async function HomePage({ searchParams }: Props) {
             <div className="sb-ttl">Top Leagues</div>
             {TOP_LEAGUES.map(l => (
               <a key={l.s} href={`/leagues/${l.s}`} className="sb-lg">
-                <span style={{fontSize:16,lineHeight:1,flexShrink:0}}>{l.f}</span>
+                {l.logo
+                  ? <img src={l.logo} alt={l.n} width={20} height={20} style={{objectFit:'contain',flexShrink:0}} />
+                  : <span style={{fontSize:16,lineHeight:1,flexShrink:0}}>{l.f}</span>}
                 <span className="sb-lg-n">{l.n}</span>
                 <span className="sb-arr">›</span>
               </a>

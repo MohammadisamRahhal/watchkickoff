@@ -366,3 +366,9 @@ button{cursor:pointer;font-family:inherit;border:none;background:none}
   .ds-in{padding:5px 10px}
   .qlb-in{padding:5px 10px}
 }
+
+/* ── Homepage fixes ── */
+.mr-live{background:#f0f6ff !important}
+.mr-live:hover{background:#e8f0fe !important}
+.qlb{display:none}
+.hp-sb .sb-card .sb-league img,.hp-sb .sb-card .sbr img{width:20px;height:20px;object-fit:contain}
