@@ -157,8 +157,10 @@ export async function findTeamSquad(teamId: string) {
 }
 
 export async function findTeamStandings(teamId: string, season: string = '2025') {
+  // Get ALL leagues this team has standings in (not just one)
   const leaguesResult = await db.execute(sql`
     SELECT DISTINCT l.id, l.name, l.slug, l.country_code,
+      l.provider_ref->>'apiFootball' AS api_id,
       CASE
         WHEN l.name ILIKE '%premier league%' AND l.country_code NOT IN ('WW') THEN 100
         WHEN l.name ILIKE '%la liga%' THEN 90
@@ -179,6 +181,8 @@ export async function findTeamStandings(teamId: string, season: string = '2025')
   `);
 
   if (!leaguesResult.rows[0]) return null;
+
+  // Fetch standings table for the first (primary) league
   const primaryLeagueId = (leaguesResult.rows[0] as any).id;
 
   const standings = await db.execute(sql`
@@ -194,28 +198,36 @@ export async function findTeamStandings(teamId: string, season: string = '2025')
     ORDER BY s.position ASC
   `);
 
+  // Home stats for this team
   const homeStats = await db.execute(sql`
     SELECT
-      COUNT(*) FILTER (WHERE status='FINISHED') AS played,
-      COUNT(*) FILTER (WHERE status='FINISHED' AND home_score > away_score) AS wins,
-      COUNT(*) FILTER (WHERE status='FINISHED' AND home_score = away_score) AS draws,
-      COUNT(*) FILTER (WHERE status='FINISHED' AND home_score < away_score) AS losses,
-      COALESCE(SUM(home_score) FILTER (WHERE status='FINISHED'),0) AS goals_for,
-      COALESCE(SUM(away_score) FILTER (WHERE status='FINISHED'),0) AS goals_against
+      COUNT(*) FILTER (WHERE status = 'FINISHED') AS played,
+      COUNT(*) FILTER (WHERE status = 'FINISHED' AND home_score > away_score) AS wins,
+      COUNT(*) FILTER (WHERE status = 'FINISHED' AND home_score = away_score) AS draws,
+      COUNT(*) FILTER (WHERE status = 'FINISHED' AND home_score < away_score) AS losses,
+      COALESCE(SUM(home_score) FILTER (WHERE status = 'FINISHED'), 0) AS goals_for,
+      COALESCE(SUM(away_score) FILTER (WHERE status = 'FINISHED'), 0) AS goals_against,
+      COALESCE(SUM(home_score - away_score) FILTER (WHERE status = 'FINISHED'), 0) AS goal_diff
     FROM matches
-    WHERE home_team_id = ${teamId} AND season = ${season} AND league_id = ${primaryLeagueId}
+    WHERE home_team_id = ${teamId}
+      AND season = ${season}
+      AND league_id = ${primaryLeagueId}
   `);
 
+  // Away stats for this team
   const awayStats = await db.execute(sql`
     SELECT
-      COUNT(*) FILTER (WHERE status='FINISHED') AS played,
-      COUNT(*) FILTER (WHERE status='FINISHED' AND away_score > home_score) AS wins,
-      COUNT(*) FILTER (WHERE status='FINISHED' AND away_score = home_score) AS draws,
-      COUNT(*) FILTER (WHERE status='FINISHED' AND away_score < home_score) AS losses,
-      COALESCE(SUM(away_score) FILTER (WHERE status='FINISHED'),0) AS goals_for,
-      COALESCE(SUM(home_score) FILTER (WHERE status='FINISHED'),0) AS goals_against
+      COUNT(*) FILTER (WHERE status = 'FINISHED') AS played,
+      COUNT(*) FILTER (WHERE status = 'FINISHED' AND away_score > home_score) AS wins,
+      COUNT(*) FILTER (WHERE status = 'FINISHED' AND away_score = home_score) AS draws,
+      COUNT(*) FILTER (WHERE status = 'FINISHED' AND away_score < home_score) AS losses,
+      COALESCE(SUM(away_score) FILTER (WHERE status = 'FINISHED'), 0) AS goals_for,
+      COALESCE(SUM(home_score) FILTER (WHERE status = 'FINISHED'), 0) AS goals_against,
+      COALESCE(SUM(away_score - home_score) FILTER (WHERE status = 'FINISHED'), 0) AS goal_diff
     FROM matches
-    WHERE away_team_id = ${teamId} AND season = ${season} AND league_id = ${primaryLeagueId}
+    WHERE away_team_id = ${teamId}
+      AND season = ${season}
+      AND league_id = ${primaryLeagueId}
   `);
 
   return {
@@ -226,7 +238,6 @@ export async function findTeamStandings(teamId: string, season: string = '2025')
     awayStats: awayStats.rows[0] ?? null,
   };
 }
-
 
 export async function findTeamStats(teamId: string, season: string = '2025') {
   const result = await db.execute(sql`
