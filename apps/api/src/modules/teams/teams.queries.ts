@@ -236,6 +236,7 @@ export async function findTeamTransfers(teamId: string) {
   const result = await db.execute(sql`
     SELECT
       tr.id, tr.transfer_date, tr.fee_amount, tr.fee_currency, tr.fee_type,
+      tr.from_team_id, tr.to_team_id,
       p.id AS player_id, p.name AS player_name, p.slug AS player_slug, p.position,
       ft.name AS from_team_name, ft.slug AS from_team_slug, ft.crest_url AS from_crest,
       tt.name AS to_team_name, tt.slug AS to_team_slug, tt.crest_url AS to_crest
@@ -243,9 +244,9 @@ export async function findTeamTransfers(teamId: string) {
     JOIN players p ON p.id = tr.player_id
     LEFT JOIN teams ft ON ft.id = tr.from_team_id
     LEFT JOIN teams tt ON tt.id = tr.to_team_id
-    WHERE (tr.from_team_id = ${teamId} OR tr.to_team_id = ${teamId})
+    WHERE (tr.from_team_id = ${teamId}::uuid OR tr.to_team_id = ${teamId}::uuid)
     ORDER BY tr.transfer_date DESC
-    LIMIT 50
+    LIMIT 100
   `);
   return result.rows;
 }
