@@ -25,7 +25,7 @@ async function SiteHeader() {
   const pathname = hdrs.get("x-pathname") ?? hdrs.get("x-invoke-path") ?? "";
 
   const NAV = [
-    { href: "/",        label: "Scores"  },
+    { href: "/",        label: "Today"  },
     { href: "/live",    label: "Live"    },
     { href: "/leagues", label: "Leagues" },
     { href: "/search",  label: "Search"  },
@@ -41,7 +41,7 @@ async function SiteHeader() {
       <div className="site-header__inner">
         <a href="/" className="site-logo">
           <span className="site-logo__icon">⚽</span>
-          <span>WATCH<span style={{ color: "#1d4ed8" }}>KICKOFF</span></span>
+          <span>WATCH<span style={{ color: "#1e40af" }}>KICKOFF</span></span>
         </a>
         <nav className="site-nav">
           {NAV.map(({ href, label }) => (
