@@ -46,7 +46,7 @@ export default async function ScorersPage({ params, searchParams }: Props) {
   return (
     <div className="container" style={{paddingTop:20, paddingBottom:60}}>
       <nav className="breadcrumb">
-        <a href="/">Today</a><span className="breadcrumb__sep">›</span>
+        <a href="/">Home</a><span className="breadcrumb__sep">›</span>
         <a href="/leagues">Leagues</a><span className="breadcrumb__sep">›</span>
         <span>{league.name}</span><span className="breadcrumb__sep">›</span>
         <span style={{color:'var(--text-muted)'}}>Stats</span>
