@@ -42,13 +42,13 @@ export default function MatchHero({ match }: { match: any }) {
     <div className="mh">
       <div className="mh-meta">
         {league?.logoUrl && <img src={league.logoUrl} alt="" width={16} height={16} style={{objectFit:'contain'}} onError={(e:any)=>{e.target.style.display='none';}} />}
-        {league && <Link href={`/leagues/${league.slug}/fixtures`} className="mh-league">{league.name}</Link>}
+        {league && <Link href={`/leagues/${league.slug}`} className="mh-league">{league.name}</Link>}
         {round && <span className="mh-round">· {round}</span>}
       </div>
 
       <div className="mh-row">
         <div className="mh-team">
-          <Link href={`/teams/${homeTeam?.slug}/fixtures`} className="mh-tlink">
+          <Link href={`/teams/${homeTeam?.slug}`} className="mh-tlink">
             <Crest src={homeTeam?.crestUrl} name={homeTeam?.name||'Home'} />
             <span className="mh-tname">{homeTeam?.name}</span>
           </Link>
@@ -83,7 +83,7 @@ export default function MatchHero({ match }: { match: any }) {
         </div>
 
         <div className="mh-team">
-          <Link href={`/teams/${awayTeam?.slug}/fixtures`} className="mh-tlink">
+          <Link href={`/teams/${awayTeam?.slug}`} className="mh-tlink">
             <Crest src={awayTeam?.crestUrl} name={awayTeam?.name||'Away'} />
             <span className="mh-tname">{awayTeam?.name}</span>
           </Link>

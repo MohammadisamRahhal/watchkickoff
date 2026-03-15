@@ -114,7 +114,7 @@ export default function ScorersClient({ scorers, yellows, reds, slug }: Props) {
                   <td style={{padding:'11px 14px'}}>
                     <div style={{display:'flex',alignItems:'center',gap:8}}>
                       <Crest url={s.teamCrest??null} name={s.teamName??''} />
-                      <a href={`/teams/${s.teamSlug}/fixtures`} style={{textDecoration:'none',color:'var(--text-muted)',fontSize:13}}>{s.teamName}</a>
+                      <a href={`/teams/${s.teamSlug}`} style={{textDecoration:'none',color:'var(--text-muted)',fontSize:13}}>{s.teamName}</a>
                     </div>
                   </td>
                   {!['yellow','red'].includes(tab) && <td style={{padding:'11px 14px',textAlign:'center' as const,fontSize:13,color:'var(--text-muted)'}}>{s.appearances??'-'}</td>}

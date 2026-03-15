@@ -160,7 +160,7 @@ export default async function StandingsPage({ params, searchParams }: Props) {
                         <span style={{fontSize:13, fontWeight:600, color:'var(--text-muted)', paddingLeft:6}}>{filter !== 'all' ? i+1 : row.position}</span>
                       </td>
                       <td style={{padding:'11px 12px'}}>
-                        <a href={`/teams/${row.teamSlug}/fixtures`} style={{display:'flex',alignItems:'center',gap:10,textDecoration:'none',color:'var(--text)'}}>
+                        <a href={`/teams/${row.teamSlug}`} style={{display:'flex',alignItems:'center',gap:10,textDecoration:'none',color:'var(--text)'}}>
                           <TeamCrest url={row.teamCrest ?? null} name={row.teamName ?? ''} size={22} />
                           <span style={{fontWeight:600, fontSize:14}}>{row.teamName}</span>
                         </a>

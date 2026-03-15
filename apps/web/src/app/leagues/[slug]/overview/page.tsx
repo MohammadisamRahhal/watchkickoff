@@ -161,7 +161,7 @@ export default async function LeagueOverviewPage({ params }: Props) {
                           <span style={{ fontSize: 12, color: 'var(--text-muted)', paddingLeft: 6 }}>{row.position}</span>
                         </td>
                         <td style={{ padding: '8px 8px' }}>
-                          <a href={`/teams/${row.teamSlug}/fixtures`} style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'var(--text)' }}>
+                          <a href={`/teams/${row.teamSlug}`} style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', color: 'var(--text)' }}>
                             <TeamCrest url={row.teamCrest ?? null} name={row.teamName ?? ''} size={18} />
                             <span style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, maxWidth: 90 }}>{row.teamName}</span>
                           </a>

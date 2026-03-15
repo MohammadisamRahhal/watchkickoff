@@ -186,7 +186,7 @@ function StatsTab({stats}:{stats:any[]}) {
                     <td style={{padding:'10px'}}>
                       <div style={{display:'flex',alignItems:'center',gap:6}}>
                         {s.team.crest&&<img src={s.team.crest} alt="" width={16} height={16} style={{objectFit:'contain',borderRadius:2}} onError={(e:any)=>{e.currentTarget.style.display='none';}}/>}
-                        <Link href={`/teams/${s.team.slug}/fixtures`} style={{color:'var(--text-muted)',fontSize:12}}>{s.team.name}</Link>
+                        <Link href={`/teams/${s.team.slug}`} style={{color:'var(--text-muted)',fontSize:12}}>{s.team.name}</Link>
                       </div>
                     </td>
                     <td style={{textAlign:'center',padding:'10px',color:'var(--text-muted)'}}>{s.appearances||'—'}</td>
@@ -230,7 +230,7 @@ function CareerTab({career}:{career:any[]}) {
               <div key={i} style={{marginBottom:i<rows.length-1?16:0}}>
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
                   {r.team.crest&&<img src={r.team.crest} alt="" width={22} height={22} style={{borderRadius:3,objectFit:'contain'}} onError={(e:any)=>{e.currentTarget.style.display='none';}}/>}
-                  <Link href={`/teams/${r.team.slug}/fixtures`} style={{fontSize:15,fontWeight:700,color:'var(--text)',fontFamily:'var(--font-display)'}}>{r.team.name}</Link>
+                  <Link href={`/teams/${r.team.slug}`} style={{fontSize:15,fontWeight:700,color:'var(--text)',fontFamily:'var(--font-display)'}}>{r.team.name}</Link>
                 </div>
                 <Link href={`/leagues/${r.league.slug}/fixtures`} style={{fontSize:12,color:'var(--text-dim)',display:'block',marginBottom:6}}>{r.league.name}</Link>
                 <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>

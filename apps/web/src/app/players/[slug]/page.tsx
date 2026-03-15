@@ -95,7 +95,7 @@ export default async function PlayerPage({ params }: { params: { slug: string } 
           <span style={{ color:'var(--border)' }}>›</span>
           {player.currentTeam && (
             <>
-              <Link href={`/teams/${player.currentTeam.slug}/fixtures`} style={{ color:'var(--text-muted)' }}>
+              <Link href={`/teams/${player.currentTeam.slug}`} style={{ color:'var(--text-muted)' }}>
                 {player.currentTeam.name}
               </Link>
               <span style={{ color:'var(--border)' }}>›</span>
@@ -150,7 +150,7 @@ export default async function PlayerPage({ params }: { params: { slug: string } 
                   </span>
                 )}
                 {player.currentTeam && (
-                  <Link href={`/teams/${player.currentTeam.slug}/fixtures`} style={{ display:'inline-flex', alignItems:'center', gap:5, background:'var(--bg-elevated)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', padding:'3px 10px', fontSize:13, color:'var(--text-muted)', fontWeight:500 }}>
+                  <Link href={`/teams/${player.currentTeam.slug}`} style={{ display:'inline-flex', alignItems:'center', gap:5, background:'var(--bg-elevated)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', padding:'3px 10px', fontSize:13, color:'var(--text-muted)', fontWeight:500 }}>
                     {player.currentTeam.crest && <img src={player.currentTeam.crest} alt="" width={16} height={16} style={{ borderRadius:2, objectFit:'contain' }} />}
                     {player.currentTeam.name}
                   </Link>

@@ -37,7 +37,7 @@ export default function MatchClientPage({ match: initialMatch }: { match: any })
       <div className="match-breadcrumb">
         <Link href="/">Home</Link>
         <span>›</span>
-        {match.league && <><Link href={`/leagues/${match.league.slug}/fixtures`}>{match.league.name}</Link><span>›</span></>}
+        {match.league && <><Link href={`/leagues/${match.league.slug}`}>{match.league.name}</Link><span>›</span></>}
         <span>{match.homeTeam?.name} vs {match.awayTeam?.name}</span>
       </div>
 

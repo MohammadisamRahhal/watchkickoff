@@ -9,7 +9,11 @@ import { matchesQueries } from '@modules/matches/matches.queries.js';
 import { matchesCache } from '@modules/matches/matches.cache.js';
 import { QUEUE_COMPLETED_JOBS_RETAIN, QUEUE_FAILED_JOBS_RETAIN } from '@config/constants.js';
 const logger = createLogger('worker:fixture-sync');
-function makeSlug(externalId: string) { return `fixture-${externalId}`; }
+function makeSlug(homeTeamName: string, awayTeamName: string, kickoffAt: Date): string {
+  const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const date = kickoffAt.toISOString().slice(0, 10);
+  return `${slugify(homeTeamName)}-vs-${slugify(awayTeamName)}-${date}`;
+}
 function makeTeamSlug(externalId: string, name: string) {
   return `team-${externalId}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 40)}`;
 }
@@ -49,7 +53,7 @@ async function syncTodayFixtures(): Promise<void> {
         kickoffAt: fx.kickoffAt, status: fx.status,
         homeScore: fx.homeScore, awayScore: fx.awayScore,
         season: fx.season, round: fx.round, venue: fx.venue,
-        rawStatus: fx.rawStatus, slug: makeSlug(fx.externalId),
+        rawStatus: fx.rawStatus, slug: makeSlug(fx.homeTeamName ?? fx.externalHomeTeamId, fx.awayTeamName ?? fx.externalAwayTeamId, fx.kickoffAt),
       });
     } catch (err) {
       logger.error({ err, externalId: fx.externalId }, 'Failed to upsert fixture');
