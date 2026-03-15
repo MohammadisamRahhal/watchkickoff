@@ -30,7 +30,9 @@ export default function TeamClientPage({ slug, activeTab, overview, fixtures, re
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      <TeamHero team={team} stats={overview?.stats} form={overview?.form} />
+      <TeamHero team={team} stats={overview?.stats} form={overview?.form} teamId={team?.id} />
+
+      {/* Tabs */}
       <div style={{ background: 'var(--bg-card)', borderBottom: '2px solid var(--border)', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', overflowX: 'auto', scrollbarWidth: 'none' }}>
           {TABS.map(t => (
@@ -48,6 +50,8 @@ export default function TeamClientPage({ slug, activeTab, overview, fixtures, re
           ))}
         </div>
       </div>
+
+      {/* Content */}
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 16px 60px' }}>
         {tab === 'overview'  && <TeamOverview overview={overview} teamId={team?.id} />}
         {tab === 'fixtures'  && <TeamFixtures matches={fixtures} teamId={team?.id} type="fixtures" />}
