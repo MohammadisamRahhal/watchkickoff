@@ -75,14 +75,17 @@ export async function findTeamOverview(teamId: string) {
   const topScorers = await db.execute(sql`
     SELECT
       p.id, p.name, p.slug, p.position, p.nationality_code,
-      ss.goals, ss.assists, ss.appearances
+      SUM(ss.goals) AS goals,
+      SUM(ss.assists) AS assists,
+      SUM(ss.appearances) AS appearances
     FROM season_stats ss
     JOIN players p ON p.id = ss.player_id
     WHERE ss.team_id = ${teamId}
       AND ss.season = '2025'
       AND ss.goals > 0
-    ORDER BY ss.goals DESC
-    LIMIT 5
+    GROUP BY p.id, p.name, p.slug, p.position, p.nationality_code
+    ORDER BY SUM(ss.goals) DESC
+    LIMIT 10
   `);
 
   return {
