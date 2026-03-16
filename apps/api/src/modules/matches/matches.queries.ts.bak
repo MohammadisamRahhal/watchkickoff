@@ -79,30 +79,13 @@ export const matchesQueries = {
   },
 
   async upsertMatch(data: { externalId: string; leagueId: string; homeTeamId: string; awayTeamId: string; kickoffAt: Date; status: string; homeScore: number; awayScore: number; homeScoreHt?: number; awayScoreHt?: number; minute?: number; minuteExtra?: number; season: string; round?: string; venue?: string; rawStatus?: string; slug: string; }): Promise<string> {
-    // 1. Find by provider_ref (most reliable)
-    const byRef = await db.execute(sql`SELECT id FROM matches WHERE provider_ref->>'apiFootball' = ${data.externalId} LIMIT 1`);
-    if ((byRef.rows as any[])[0]) {
-      const existingId = (byRef.rows as any[])[0].id;
-      await db.update(matches).set({ status: data.status as any, homeScore: data.homeScore, awayScore: data.awayScore, homeScoreHt: data.homeScoreHt, awayScoreHt: data.awayScoreHt, minute: data.minute, minuteExtra: data.minuteExtra, rawStatus: data.rawStatus, updatedAt: new Date() }).where(eq(matches.id, existingId));
-      return existingId;
+    const existing = await db.select({ id: matches.id, slug: matches.slug }).from(matches).where(sql`home_team_id = ${data.homeTeamId} AND away_team_id = ${data.awayTeamId} AND kickoff_at = ${data.kickoffAt}`).limit(1);
+    if (existing[0]) {
+      await db.update(matches).set({ slug: data.slug, status: data.status as any, homeScore: data.homeScore, awayScore: data.awayScore, homeScoreHt: data.homeScoreHt, awayScoreHt: data.awayScoreHt, minute: data.minute, minuteExtra: data.minuteExtra, rawStatus: data.rawStatus, updatedAt: new Date() }).where(eq(matches.id, existing[0].id));
+      return existing[0].id;
     }
-    // 2. Find by home+away+kickoff
-    const byTeams = await db.select({ id: matches.id }).from(matches).where(sql`home_team_id = ${data.homeTeamId} AND away_team_id = ${data.awayTeamId} AND kickoff_at = ${data.kickoffAt}`).limit(1);
-    if (byTeams[0]) {
-      await db.update(matches).set({ status: data.status as any, homeScore: data.homeScore, awayScore: data.awayScore, homeScoreHt: data.homeScoreHt, awayScoreHt: data.awayScoreHt, minute: data.minute, minuteExtra: data.minuteExtra, rawStatus: data.rawStatus, providerRef: { apiFootball: data.externalId }, updatedAt: new Date() }).where(eq(matches.id, byTeams[0].id));
-      return byTeams[0].id;
-    }
-    // 3. Insert new — handle slug conflict
-    try {
-      const inserted = await db.insert(matches).values({ slug: data.slug, leagueId: data.leagueId, homeTeamId: data.homeTeamId, awayTeamId: data.awayTeamId, kickoffAt: data.kickoffAt, status: data.status as any, homeScore: data.homeScore, awayScore: data.awayScore, homeScoreHt: data.homeScoreHt, awayScoreHt: data.awayScoreHt, minute: data.minute, minuteExtra: data.minuteExtra, season: data.season, round: data.round, venue: data.venue, rawStatus: data.rawStatus, providerRef: { apiFootball: data.externalId } }).returning({ id: matches.id });
-      return inserted[0]!.id;
-    } catch (e: any) {
-      if (e.code === '23505') {
-        const conflict = await db.select({ id: matches.id }).from(matches).where(sql`slug = ${data.slug}`).limit(1);
-        if (conflict[0]) return conflict[0].id;
-      }
-      throw e;
-    }
+    const inserted = await db.insert(matches).values({ slug: data.slug, leagueId: data.leagueId, homeTeamId: data.homeTeamId, awayTeamId: data.awayTeamId, kickoffAt: data.kickoffAt, status: data.status as any, homeScore: data.homeScore, awayScore: data.awayScore, homeScoreHt: data.homeScoreHt, awayScoreHt: data.awayScoreHt, minute: data.minute, minuteExtra: data.minuteExtra, season: data.season, round: data.round, venue: data.venue, rawStatus: data.rawStatus, providerRef: { apiFootball: data.externalId } }).returning({ id: matches.id });
+    return inserted[0]!.id;
   },
 
   async findLineupsByMatchId(matchId: string) {
