@@ -39,7 +39,7 @@ async function syncStandings(): Promise<void> {
       const extIds = allEntries.map((e: any) => String(e.team.id));
       const { rows: teamRows } = await db.execute(sql`
         SELECT id, provider_ref->>'apiFootball' AS ext_id FROM teams
-        WHERE provider_ref->>'apiFootball' = ANY(${extIds}::text[])
+        WHERE provider_ref->>'apiFootball' = ANY(ARRAY[${sql.raw(extIds.map(id => `'${id.replace(/'/g, "''")}'`).join(','))}]::text[])
       `);
       const teamMap = new Map((teamRows as any[]).map(t => [t.ext_id, t.id]));
       const entries: any[] = [];
