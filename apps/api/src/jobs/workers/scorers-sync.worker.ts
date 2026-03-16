@@ -18,7 +18,7 @@ async function syncTopScorers(): Promise<void> {
   const { rows: leagueRows } = await db.execute(sql`
     SELECT id, name, season, provider_ref->>'apiFootball' AS ext_id
     FROM leagues
-    WHERE provider_ref->>'apiFootball' = ANY(${MAJOR_LEAGUE_API_IDS}::text[])
+    WHERE provider_ref->>'apiFootball' IN ('2','3','39','61','78','135','140','307')
       AND is_active = true
       AND season = '2025'
     ORDER BY name
