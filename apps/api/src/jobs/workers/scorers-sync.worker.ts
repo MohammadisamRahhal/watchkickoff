@@ -1,6 +1,6 @@
 /**
- * scorers-sync worker — fetches top scorers per league and upserts to season_stats.
- * Runs every 6 hours alongside standing-sync.
+ * scorers-sync worker — fetches top scorers for 8 major leagues ONLY.
+ * Runs every 6 hours = 8 requests/run.
  */
 import { Worker } from 'bullmq';
 import { bullmqConnection } from '@infrastructure/redis/bullmq-connection.js';
@@ -12,18 +12,19 @@ import { QUEUE_COMPLETED_JOBS_RETAIN, QUEUE_FAILED_JOBS_RETAIN } from '@config/c
 
 const logger = createLogger('worker:scorers-sync');
 
+const MAJOR_LEAGUE_API_IDS = ['2', '3', '39', '61', '78', '135', '140', '307'];
+
 async function syncTopScorers(): Promise<void> {
-  // Get active leagues with external IDs
   const { rows: leagueRows } = await db.execute(sql`
     SELECT id, name, season, provider_ref->>'apiFootball' AS ext_id
     FROM leagues
-    WHERE is_active = true
-      AND provider_ref->>'apiFootball' IS NOT NULL
-      AND provider_ref->>'apiFootball' != ''
+    WHERE provider_ref->>'apiFootball' = ANY(${MAJOR_LEAGUE_API_IDS}::text[])
+      AND is_active = true
+      AND season = '2025'
     ORDER BY name
   `);
 
-  logger.info({ count: (leagueRows as any[]).length }, 'Syncing top scorers for leagues');
+  logger.info({ count: (leagueRows as any[]).length }, 'Syncing top scorers for major leagues');
 
   let upserted = 0; let failed = 0;
 
@@ -36,7 +37,6 @@ async function syncTopScorers(): Promise<void> {
 
       for (const s of scorers) {
         try {
-          // Resolve or create player
           let playerIdRes = await db.execute(sql`
             SELECT id FROM players WHERE provider_ref->>'apiFootball' = ${s.externalPlayerId} LIMIT 1
           `);
@@ -56,14 +56,12 @@ async function syncTopScorers(): Promise<void> {
             if (!playerId) continue;
           }
 
-          // Resolve team
           const teamRes = await db.execute(sql`
             SELECT id FROM teams WHERE provider_ref->>'apiFootball' = ${s.externalTeamId} LIMIT 1
           `);
           const teamId = (teamRes.rows as any[])[0]?.id;
           if (!teamId) continue;
 
-          // Upsert season_stats
           await db.execute(sql`
             INSERT INTO season_stats (
               id, player_id, team_id, league_id, season,
@@ -77,29 +75,20 @@ async function syncTopScorers(): Promise<void> {
               ${s.passesTotal}, ${s.passAccuracy}, ${s.rating}, NOW()
             )
             ON CONFLICT (player_id, league_id, season) DO UPDATE SET
-              goals            = EXCLUDED.goals,
-              assists          = EXCLUDED.assists,
-              appearances      = EXCLUDED.appearances,
-              minutes_played   = EXCLUDED.minutes_played,
-              yellow_cards     = EXCLUDED.yellow_cards,
-              red_cards        = EXCLUDED.red_cards,
-              shots_total      = EXCLUDED.shots_total,
-              shots_on_target  = EXCLUDED.shots_on_target,
-              passes_total     = EXCLUDED.passes_total,
-              pass_accuracy    = EXCLUDED.pass_accuracy,
-              rating           = EXCLUDED.rating,
-              updated_at       = NOW()
+              goals=EXCLUDED.goals, assists=EXCLUDED.assists,
+              appearances=EXCLUDED.appearances, minutes_played=EXCLUDED.minutes_played,
+              yellow_cards=EXCLUDED.yellow_cards, red_cards=EXCLUDED.red_cards,
+              shots_total=EXCLUDED.shots_total, shots_on_target=EXCLUDED.shots_on_target,
+              passes_total=EXCLUDED.passes_total, pass_accuracy=EXCLUDED.pass_accuracy,
+              rating=EXCLUDED.rating, updated_at=NOW()
           `);
           upserted++;
-        } catch (sErr) {
-          logger.warn({ sErr, playerId: s.externalPlayerId }, 'Failed to upsert scorer stat');
-        }
+        } catch {}
       }
-
-      // Rate limit: 500ms between leagues
-      await new Promise(r => setTimeout(r, 500));
+      logger.info({ league: league.name, scorers: scorers.length }, 'Scorers updated');
+      await new Promise(r => setTimeout(r, 300));
     } catch (err) {
-      logger.error({ err, leagueId: league.id, name: league.name }, 'Failed to fetch top scorers');
+      logger.error({ err, league: league.name }, 'Failed to fetch top scorers');
       failed++;
     }
   }
@@ -117,13 +106,11 @@ export function createScorersSyncWorker(): Worker {
     {
       connection: bullmqConnection,
       concurrency: 1,
-      lockDuration: 300000,
-      lockRenewTime: 60000,
       removeOnComplete: { count: QUEUE_COMPLETED_JOBS_RETAIN },
       removeOnFail:     { count: QUEUE_FAILED_JOBS_RETAIN },
     },
   );
   worker.on('failed', (job, err) => logger.error({ jobId: job?.id, err }, 'scorers-sync job failed'));
-  worker.on('error', (err) => logger.error({ err }, 'scorers-sync worker error'));
+  worker.on('error',  (err) => logger.error({ err }, 'scorers-sync worker error'));
   return worker;
 }
