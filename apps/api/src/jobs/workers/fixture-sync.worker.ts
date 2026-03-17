@@ -116,7 +116,7 @@ async function syncTodayFixtures(): Promise<void> {
         homeScore: fx.homeScore,
         awayScore: fx.awayScore,
         season: fx.season,
-        round: fx.round,
+        round: fx.round ?? undefined,
         venue: fx.venue,
         rawStatus: fx.rawStatus,
         slug: makeMatchSlug(
