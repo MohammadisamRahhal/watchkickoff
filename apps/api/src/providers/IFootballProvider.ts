@@ -48,7 +48,7 @@ export interface ProviderFixture {
   homeScore:          number;
   awayScore:          number;
   season:             string;
-  round?:             string;
+  round?:             string | null;
   venue?:             string;
   rawStatus:          string;
   minute?:            number | null;

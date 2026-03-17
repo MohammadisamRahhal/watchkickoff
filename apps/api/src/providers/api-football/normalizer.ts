@@ -95,7 +95,7 @@ export function normalizeFixture(raw: ApiFixture): ProviderFixture {
     homeScore:          raw.goals.home ?? 0,
     awayScore:          raw.goals.away ?? 0,
     season:             String(raw.league.season),
-    round:              raw.league.round,
+    round:              raw.league.round ?? null,
     venue:              raw.fixture.venue?.name ?? undefined,
     rawStatus:          raw.fixture.status.short,
     minute:             raw.fixture.status.elapsed ?? null,
