@@ -65,7 +65,7 @@ export const ApiFixtureSchema = z.object({
     logo:    z.string().optional(),
     flag:    z.string().nullable().optional(),
     season:  z.number(),
-    round:   z.string().optional(),
+    round:   z.string().nullable().optional(),
   }),
   teams: z.object({
     home: ApiTeamRefSchema,
@@ -195,7 +195,7 @@ export const ApiPlayerSchema = z.object({
     nationality: z.string().nullable().optional(),
     height:      z.string().nullable().optional(),
     weight:      z.string().nullable().optional(),
-    photo:       z.string().optional(),
+    photo:       z.string().nullable().optional(),
   }),
   statistics: z.array(ApiPlayerStatisticsSchema),
 });
@@ -225,7 +225,7 @@ export const ApiLineupSchema = z.object({
   coach: z.object({
     id:   z.number().nullable().optional(),
     name: z.string().nullable().optional(),
-    photo: z.string().optional(),
+    photo: z.string().nullable().optional(),
   }).optional(),
 });
 
