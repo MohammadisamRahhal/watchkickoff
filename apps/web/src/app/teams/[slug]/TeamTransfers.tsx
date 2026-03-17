@@ -46,8 +46,20 @@ export default function TeamTransfers({ transfers, teamId }: { transfers: any[];
     </div>
   );
 
-  const incoming = transfers.filter((t: any) => t.to_team_id === teamId);
-  const outgoing = transfers.filter((t: any) => t.from_team_id === teamId);
+  // Deduplicate: prefer transfers with known team names over Unknown
+  const deduped = transfers.filter((t: any, idx: number, arr: any[]) => {
+    const hasBetter = arr.some((other: any, otherIdx: number) =>
+      otherIdx !== idx &&
+      other.player_id === t.player_id &&
+      other.transfer_date === t.transfer_date &&
+      other.fee_type === t.fee_type &&
+      (other.from_team_name != null || other.to_team_name != null) &&
+      (t.from_team_name == null && t.to_team_name == null)
+    );
+    return !hasBetter;
+  });
+  const incoming = deduped.filter((t: any) => t.to_team_id === teamId);
+  const outgoing = deduped.filter((t: any) => t.from_team_id === teamId);
 
   return (
     <div>
